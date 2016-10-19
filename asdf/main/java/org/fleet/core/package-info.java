@@ -2,4 +2,4 @@
  * @author benkick
  *
  */
-package main;
+package org.fleet.core;

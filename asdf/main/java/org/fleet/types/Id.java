@@ -1,4 +1,4 @@
-package types;
+package org.fleet.types;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

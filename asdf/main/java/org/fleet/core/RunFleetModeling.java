@@ -1,4 +1,4 @@
-package main;
+package org.fleet.core;
 
 /**
  * @author benkick
@@ -10,6 +10,7 @@ public class RunFleetModeling {
 		FleetModeling fleetModeling = new FleetModeling();
 		fleetModeling.initialize();
 		fleetModeling.run();
+		fleetModeling.postprocess();
 	}
 
 }
