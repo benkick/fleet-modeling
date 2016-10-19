@@ -19,8 +19,8 @@ public class FleetModeling {
 	private static final Logger log = Logger.getLogger(FleetModeling.class.getName());
 	
 	private final Random random = new Random(1331);
-	private final int noOfHH = 45000;
-	private final int noOfVeh = 45000;
+	private final int noOfHH = 10;
+	private final int noOfVeh = 10;
 	private int gasolineCounter = 0;
 	private int dieselCounter = 0;
 	private int gasCounter = 0;
@@ -37,9 +37,10 @@ public class FleetModeling {
 		this.households = new Households();
 	}
 	
-	public void initialize() {
+	public void preprocess() {
 		generateInitialVehicles();
 		generateInitialHouseholds();
+		writeInitialInformation();
 	}
 
 	public void run() {
@@ -48,10 +49,10 @@ public class FleetModeling {
 	}
 
 	public void postprocess() {
-		writeInformation();
+//		nothing so far
 	}
 	
-	private void writeInformation() {
+	private void writeInitialInformation() {
 		log.info("Created " + Drivetrain.GASOLINE + " vehicles: " + gasolineCounter);
 		log.info("Created " + Drivetrain.DIESEL + " vehicles: " + dieselCounter);
 		log.info("Created " + Drivetrain.NATURAL_GAS + " vehicles: " + gasCounter);
@@ -75,9 +76,49 @@ public class FleetModeling {
 		for(int i=1;i<=noOfHH;i++){
 			Id<Household> hid = Id.createHouseholdId(i);
 			Household hh = new Household(hid);
+			assignVehicles2HH(hh);
 			this.households.addHousehold(hh);
 		}
 		log.info("Leaving generateInitialHouseholds");
+	}
+
+	private void assignVehicles2HH(Household hh) {
+		Integer noOfVehInHH = determineNoOfVehInHH();
+		for(int vehCnt=0; vehCnt<noOfVehInHH; vehCnt++){ //avoids adding a vehicle for noOfVehInHH = 0
+			Vehicle veh = chooseVehicle();
+//			log.info("Veh " + veh);
+			hh.getVehInHH().addVehicle(veh);
+		}
+	}
+
+	//TODO: it might happen that there are more/less vehicles than needed...
+	//TODO: very ugly code...
+	private Vehicle chooseVehicle() {
+		log.info("Size " + this.vehicles.getVehicles().size());
+		int rd = random.nextInt(this.vehicles.getVehicles().size());
+		log.info("Random " + rd);
+		
+		while(this.vehicles.getVehicles().get(Id.createVehicleId(rd)) == null && this.vehicles.getVehicles().size()>0){
+			rd = random.nextInt(this.vehicles.getVehicles().size());
+//			log.info("RandomX " + rd);
+		}
+		
+		Vehicle veh = this.vehicles.getVehicles().get(Id.createVehicleId(rd));
+		log.info("Veh " + veh);
+		this.vehicles.getVehicles().remove(Id.createVehicleId(rd));
+		return veh;
+	}
+
+	private Integer determineNoOfVehInHH() {
+		Integer noOfCars;
+		double rd = random.nextDouble();
+//		log.info("Random number: " + rd);
+		if(rd<0.178) noOfCars = 0;
+		else if(rd<0.71) noOfCars = 1;
+		else if(rd<0.953) noOfCars = 2;
+		else if(rd<0.994) noOfCars = 3;
+		else noOfCars = 4;
+		return noOfCars;
 	}
 
 	private Drivetrain determineDrivetrain() {
