@@ -21,9 +21,9 @@ import org.fleet.types.Vehicles;
 public class FleetModeling {
 	private static final Logger log = Logger.getLogger(FleetModeling.class.getName());
 	
-	private final Random random = new Random(1331);
-	private final int noOfHH = 10000;
-	private final int noOfVeh = 12000;
+	private static final Random random = new Random(1331);
+	private static final int noOfHH = 1000;
+	private static final int noOfVeh = 1200;
 	private int gasolineCounter = 0;
 	private int dieselCounter = 0;
 	private int gasCounter = 0;
@@ -50,7 +50,10 @@ public class FleetModeling {
 
 	public void run() {
 //		scrapeVehicles();
+		//TODO: The following could be influenced by many factors, e.g. how many vehicles die
 //		generateNewVehicles();
+//		assignNewVehicles2HH();
+//		modelSecondHandCarMarket();
 	}
 
 	public void postprocess() {
@@ -93,7 +96,6 @@ public class FleetModeling {
 		int totalVehCnt = gasolineCounter + dieselCounter + gasCounter + hybridCounter + bevCounter;
 		int marketMismatchCnt = totalVehCnt - totalVehInHHCnt;
 		log.info("In total, " + marketMismatchCnt + " are left on the market."); //is always >= 0 because otherwise the HH did not get enough vehicles
-		
 	}
 
 	private void generateInitialVehicles() {
@@ -131,7 +133,7 @@ public class FleetModeling {
 	private Vehicle chooseVehicle() {
 		Vehicle chosenVeh = null;
 		Map<Id<Vehicle>, Vehicle> availVeh = this.vehicles.getVehicles();
-		if(availVeh.size()==this.assignedVeh.size()){
+		if(this.assignedVeh.size()>=availVeh.size()){
 			throw new RuntimeException("All vehicles have already been assigned to households. Aborting...");
 		}
 		
