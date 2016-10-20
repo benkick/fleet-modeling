@@ -1,5 +1,8 @@
 package org.fleet.core;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -19,8 +22,8 @@ public class FleetModeling {
 	private static final Logger log = Logger.getLogger(FleetModeling.class.getName());
 	
 	private final Random random = new Random(1331);
-	private final int noOfHH = 10;
-	private final int noOfVeh = 10;
+	private final int noOfHH = 10000;
+	private final int noOfVeh = 12000;
 	private int gasolineCounter = 0;
 	private int dieselCounter = 0;
 	private int gasCounter = 0;
@@ -28,12 +31,14 @@ public class FleetModeling {
 	private int bevCounter = 0;
 	
 	private Vehicles vehicles;
+	private List<Id<Vehicle>> assignedVeh;
 	private Households households;
 	//TODO: How to treat company-owned, but (mainly) privately-used vehicles?
 	//private Companies companies;
 	
 	public FleetModeling(){
 		this.vehicles = new Vehicles();
+		this.assignedVeh = new ArrayList<Id<Vehicle>>();
 		this.households = new Households();
 	}
 	
@@ -58,6 +63,37 @@ public class FleetModeling {
 		log.info("Created " + Drivetrain.NATURAL_GAS + " vehicles: " + gasCounter);
 		log.info("Created " + Drivetrain.HYBRID + " vehicles: " + hybridCounter);
 		log.info("Created " + Drivetrain.BEV + " vehicles: " + bevCounter);
+		
+		
+		int zeroVehCnt = 0;
+		int oneVehCnt = 0;
+		int twoVehCnt = 0;
+		int threeVehCnt = 0;
+		int fourVehCnt = 0;
+		int totalVehInHHCnt = 0;
+		for(Household hh : households.getHouseholds().values()){
+			int vehInHH = hh.getVehInHH().getVehicles().size();
+			totalVehInHHCnt += vehInHH;
+			if(vehInHH==0) zeroVehCnt++;
+			else if(vehInHH==1) oneVehCnt++;
+			else if(vehInHH==2) twoVehCnt++;
+			else if(vehInHH==3) threeVehCnt++;
+			else if(vehInHH==4) fourVehCnt++;
+			else throw new RuntimeException("This should not happen.");
+		}
+		log.info("Households with zero vehicles: " + zeroVehCnt + " of " + households.getHouseholds().size() + " households.");
+		log.info("Households with one vehicles: " + oneVehCnt + " of " + households.getHouseholds().size() + " households.");
+		log.info("Households with two vehicles: " + twoVehCnt + " of " + households.getHouseholds().size() + " households.");
+		log.info("Households with three vehicles: " + threeVehCnt + " of " + households.getHouseholds().size() + " households.");
+		log.info("Households with four vehicles: " + fourVehCnt + " of " + households.getHouseholds().size() + " households.");
+		
+		log.info("In total, " + totalVehInHHCnt + " vehicles are assigned to households.");
+		log.info("Check sum: " + this.assignedVeh.size());
+		
+		int totalVehCnt = gasolineCounter + dieselCounter + gasCounter + hybridCounter + bevCounter;
+		int marketMismatchCnt = totalVehCnt - totalVehInHHCnt;
+		log.info("In total, " + marketMismatchCnt + " are left on the market."); //is always >= 0 because otherwise the HH did not get enough vehicles
+		
 	}
 
 	private void generateInitialVehicles() {
@@ -86,27 +122,32 @@ public class FleetModeling {
 		Integer noOfVehInHH = determineNoOfVehInHH();
 		for(int vehCnt=0; vehCnt<noOfVehInHH; vehCnt++){ //avoids adding a vehicle for noOfVehInHH = 0
 			Vehicle veh = chooseVehicle();
-//			log.info("Veh " + veh);
 			hh.getVehInHH().addVehicle(veh);
 		}
 	}
 
 	//TODO: it might happen that there are more/less vehicles than needed...
-	//TODO: very ugly code...
+	//TODO: zufälliges Ziehen ohne zurücklegen > performanter machen?
 	private Vehicle chooseVehicle() {
-		log.info("Size " + this.vehicles.getVehicles().size());
-		int rd = random.nextInt(this.vehicles.getVehicles().size());
-		log.info("Random " + rd);
-		
-		while(this.vehicles.getVehicles().get(Id.createVehicleId(rd)) == null && this.vehicles.getVehicles().size()>0){
-			rd = random.nextInt(this.vehicles.getVehicles().size());
-//			log.info("RandomX " + rd);
+		Vehicle chosenVeh = null;
+		Map<Id<Vehicle>, Vehicle> availVeh = this.vehicles.getVehicles();
+		if(availVeh.size()==this.assignedVeh.size()){
+			throw new RuntimeException("All vehicles have already been assigned to households. Aborting...");
 		}
 		
-		Vehicle veh = this.vehicles.getVehicles().get(Id.createVehicleId(rd));
-		log.info("Veh " + veh);
-		this.vehicles.getVehicles().remove(Id.createVehicleId(rd));
-		return veh;
+		for(int i=0; i<availVeh.size(); i++){
+			int rd = random.nextInt(availVeh.size()) + 1;
+//			log.info("Random " +rd);
+			chosenVeh = availVeh.get(Id.createVehicleId(rd));
+//			log.info("Chosen veh " + chosenVeh);
+			if(!this.assignedVeh.contains(chosenVeh.getId())){
+				this.assignedVeh.add(chosenVeh.getId());
+				return chosenVeh;
+			} else { 
+				//chosen vehicle already assigned, go to next random vehicle
+			}
+		}
+		return chosenVeh;
 	}
 
 	private Integer determineNoOfVehInHH() {

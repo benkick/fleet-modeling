@@ -1,4 +1,6 @@
-package org.fleet.core;
+package org.fleet.run;
+
+import org.fleet.core.FleetModeling;
 
 /**
  * @author benkick
