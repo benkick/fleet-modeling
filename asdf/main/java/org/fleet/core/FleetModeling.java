@@ -22,8 +22,8 @@ public class FleetModeling {
 	private static final Logger log = Logger.getLogger(FleetModeling.class.getName());
 	
 	private static final Random random = new Random(1331);
-	private static final int noOfHH = 1000;
-	private static final int noOfVeh = 1200;
+	private static final int noOfHH = 10000;
+	private static final int noOfVeh = 12000;
 	private int gasolineCounter = 0;
 	private int dieselCounter = 0;
 	private int gasCounter = 0;
@@ -32,6 +32,7 @@ public class FleetModeling {
 	
 	private Vehicles vehicles;
 	private List<Id<Vehicle>> assignedVeh;
+	private List<Id<Vehicle>> leftVeh;
 	private Households households;
 	//TODO: How to treat company-owned, but (mainly) privately-used vehicles?
 	//private Companies companies;
@@ -39,6 +40,7 @@ public class FleetModeling {
 	public FleetModeling(){
 		this.vehicles = new Vehicles();
 		this.assignedVeh = new ArrayList<Id<Vehicle>>();
+		this.leftVeh = new ArrayList<Id<Vehicle>>();
 		this.households = new Households();
 	}
 	
@@ -92,6 +94,7 @@ public class FleetModeling {
 		
 		log.info("In total, " + totalVehInHHCnt + " vehicles are assigned to households.");
 		log.info("Check sum: " + this.assignedVeh.size());
+		log.info("Check sum left Vehicles: " + this.leftVeh.size());
 		
 		int totalVehCnt = gasolineCounter + dieselCounter + gasCounter + hybridCounter + bevCounter;
 		int marketMismatchCnt = totalVehCnt - totalVehInHHCnt;
@@ -105,6 +108,7 @@ public class FleetModeling {
 			Drivetrain dt = determineDrivetrain();
 			Vehicle veh = new Vehicle(vid, dt);
 			this.vehicles.addVehicle(veh);
+			this.leftVeh.add(veh.getId());
 		}
 		log.info("Leaving generateInitialVehicles");
 	}
@@ -130,25 +134,40 @@ public class FleetModeling {
 
 	//TODO: it might happen that there are more/less vehicles than needed...
 	//TODO: zufälliges Ziehen ohne zurücklegen > performanter machen?
-	private Vehicle chooseVehicle() {
+//	private Vehicle chooseVehicle() {
+//		Vehicle chosenVeh = null;
+//		Map<Id<Vehicle>, Vehicle> availVeh = this.vehicles.getVehicles();
+//		if(this.assignedVeh.size()>=availVeh.size()){
+//			throw new RuntimeException("All vehicles have already been assigned to households. Aborting...");
+//		}
+//		
+//		for(int i=0; i<availVeh.size(); i++){
+//			int rd = random.nextInt(availVeh.size()) + 1;
+//			log.info("Random " +rd);
+//			chosenVeh = availVeh.get(Id.createVehicleId(rd));
+//			log.info("Chosen veh " + chosenVeh);
+//			if(!this.assignedVeh.contains(chosenVeh.getId())){
+//				this.assignedVeh.add(chosenVeh.getId());
+//				return chosenVeh;
+//			} else { 
+//				//chosen vehicle already assigned, go to next random vehicle
+//			}
+//		}
+//		return chosenVeh;
+//	}
+
+// new chooseVehicle method, runs without errors, but does it do what we want? Marie, october 21th 
+	private Vehicle chooseVehicle(){
+		Id<Vehicle> chosenVehId = null;
 		Vehicle chosenVeh = null;
-		Map<Id<Vehicle>, Vehicle> availVeh = this.vehicles.getVehicles();
-		if(this.assignedVeh.size()>=availVeh.size()){
+		if(this.leftVeh.size()==0){
 			throw new RuntimeException("All vehicles have already been assigned to households. Aborting...");
 		}
-		
-		for(int i=0; i<availVeh.size(); i++){
-			int rd = random.nextInt(availVeh.size()) + 1;
-//			log.info("Random " +rd);
-			chosenVeh = availVeh.get(Id.createVehicleId(rd));
-//			log.info("Chosen veh " + chosenVeh);
-			if(!this.assignedVeh.contains(chosenVeh.getId())){
-				this.assignedVeh.add(chosenVeh.getId());
-				return chosenVeh;
-			} else { 
-				//chosen vehicle already assigned, go to next random vehicle
-			}
-		}
+		int rd = random.nextInt(this.leftVeh.size()); 
+		chosenVehId = leftVeh.get(rd);
+		chosenVeh = vehicles.getVehicles().get(chosenVehId);
+		this.leftVeh.remove(chosenVehId);
+		this.assignedVeh.add(chosenVehId);
 		return chosenVeh;
 	}
 
