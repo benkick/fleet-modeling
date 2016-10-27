@@ -48,6 +48,7 @@ public class FleetModeling {
 		generateInitialVehicles();
 		generateInitialHouseholds();
 		writeInitialInformation();
+		writeSecondHandCarMarket();
 	}
 
 	public void run() {
@@ -205,5 +206,57 @@ public class FleetModeling {
 			bevCounter++;
 		}
 		return dt;
+	}
+	//private void modelSecondHandCarMarket(){
+	//	Vehicles vehForSale = chooseVehForSale();
+	//	Households buyingHH = chooseBuyingHH();
+	//}
+	
+	//TODO: do not iterate over vehicles - iterate over assignedVeh
+	private Vehicles chooseVehForSale(){
+		Vehicles vehForSale = new Vehicles();
+		ArrayList <Id<Vehicle>> vehIdForSale = new ArrayList<Id<Vehicle>>();
+		for(Map.Entry<Id<Vehicle>,Vehicle> entry : this.vehicles.getVehicles().entrySet()){
+			double rd = random.nextDouble();
+			if(sellUsedVeh(entry.getValue(),rd)){
+				vehForSale.getVehicles().put(entry.getKey(), entry.getValue()) ; 
+			}	
+		}
+		return vehForSale;
+	}
+	
+	private boolean sellUsedVeh(Vehicle veh, Double rand){
+		Drivetrain drivetrain = veh.getDt();
+		if(drivetrain.equals(Drivetrain.GASOLINE) && rand < 0.1645){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.DIESEL) && rand < 0.1665){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.NATURAL_GAS) && rand < 0.1687){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.HYBRID) && rand < 0.1361){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.HYBRID) && rand < 0.1266){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	private void writeSecondHandCarMarket(){
+		Vehicles example = chooseVehForSale();
+		log.info("Cars for sale in the secondhand car market: "+ example.getVehicles().size());
+		Households buyingHH = chooseBuyingHH();
+		log.info("Households buying used cars: "+ buyingHH.getHouseholds().size());
+		
+	}
+	
+	private Households chooseBuyingHH(){
+		Households buyingHH = new Households();
+		for(Map.Entry<Id<Household>,Household> entry : this.households.getHouseholds().entrySet()){
+			double rd = random.nextDouble();
+			if(rd<0.2){
+				buyingHH.getHouseholds().put(entry.getKey(), entry.getValue());
+			}
+		}
+		return buyingHH;
 	}
 }
