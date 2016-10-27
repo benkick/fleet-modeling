@@ -29,6 +29,7 @@ public class FleetModeling {
 	
 	private final Vehicles vehicles;
 	private final List<Id<Vehicle>> assignedVeh;
+	private List<Id<Vehicle>> leftVeh;
 	private final Households households;
 	//TODO: How to treat company-owned, but (mainly) privately-used vehicles?
 	//private Companies companies;
@@ -43,6 +44,7 @@ public class FleetModeling {
 		
 		this.vehicles = new Vehicles();
 		this.assignedVeh = new ArrayList<Id<Vehicle>>();
+		this.leftVeh = new ArrayList<Id<Vehicle>>();
 		this.households = new Households();
 		this.hhUtils = new HouseholdUtils();
 		this.vehUtils = new VehicleUtils();
@@ -52,6 +54,7 @@ public class FleetModeling {
 		log.info("Entering preprocessing...");
 		generateInitialVehicles();
 		generateInitialHouseholds();
+		writeSecondHandCarMarket();
 		log.info("Leaving preprocessing...");
 	}
 
@@ -98,6 +101,7 @@ public class FleetModeling {
 			Drivetrain dt = determineDrivetrain();
 			Vehicle veh = new Vehicle(vid, dt);
 			this.vehicles.addVehicle(veh);
+			this.leftVeh.add(veh.getId());
 		}
 		writeInitialVehicleInformation();
 		log.info("Leaving initial vehicle generation...");
@@ -125,25 +129,40 @@ public class FleetModeling {
 
 	//TODO: it might happen that there are more/less vehicles than needed...
 	//TODO: zufälliges Ziehen ohne zurücklegen > performanter machen?
-	private Vehicle chooseVehicle() {
+//	private Vehicle chooseVehicle() {
+//		Vehicle chosenVeh = null;
+//		Map<Id<Vehicle>, Vehicle> availVeh = this.vehicles.getVehicles();
+//		if(this.assignedVeh.size()>=availVeh.size()){
+//			throw new RuntimeException("All vehicles have already been assigned to households. Aborting...");
+//		}
+//		
+//		for(int i=0; i<availVeh.size(); i++){
+//			int rd = random.nextInt(availVeh.size()) + 1;
+//			log.info("Random " +rd);
+//			chosenVeh = availVeh.get(Id.createVehicleId(rd));
+//			log.info("Chosen veh " + chosenVeh);
+//			if(!this.assignedVeh.contains(chosenVeh.getId())){
+//				this.assignedVeh.add(chosenVeh.getId());
+//				return chosenVeh;
+//			} else { 
+//				//chosen vehicle already assigned, go to next random vehicle
+//			}
+//		}
+//		return chosenVeh;
+//	}
+
+// new chooseVehicle method, runs without errors, but does it do what we want? Marie, october 21th 
+	private Vehicle chooseVehicle(){
+		Id<Vehicle> chosenVehId = null;
 		Vehicle chosenVeh = null;
-		Map<Id<Vehicle>, Vehicle> availVeh = this.vehicles.getVehicles();
-		if(this.assignedVeh.size()>=availVeh.size()){
+		if(this.leftVeh.size()==0){
 			throw new RuntimeException("All vehicles have already been assigned to households. Aborting...");
 		}
-		
-		for(int i=0; i<availVeh.size(); i++){
-			int rd = random.nextInt(availVeh.size()) + 1;
-//			log.info("Random " +rd);
-			chosenVeh = availVeh.get(Id.createVehicleId(rd));
-//			log.info("Chosen veh " + chosenVeh);
-			if(!this.assignedVeh.contains(chosenVeh.getId())){
-				this.assignedVeh.add(chosenVeh.getId());
-				return chosenVeh;
-			} else { 
-				//chosen vehicle already assigned, go to next random vehicle
-			}
-		}
+		int rd = random.nextInt(this.leftVeh.size()); 
+		chosenVehId = leftVeh.get(rd);
+		chosenVeh = vehicles.getVehicles().get(chosenVehId);
+		this.leftVeh.remove(chosenVehId);
+		this.assignedVeh.add(chosenVehId);
 		return chosenVeh;
 	}
 
@@ -176,5 +195,57 @@ public class FleetModeling {
 			dt = Drivetrain.BEV;
 		}
 		return dt;
+	}
+	//private void modelSecondHandCarMarket(){
+	//	Vehicles vehForSale = chooseVehForSale();
+	//	Households buyingHH = chooseBuyingHH();
+	//}
+	
+	//TODO: do not iterate over vehicles - iterate over assignedVeh
+	private Vehicles chooseVehForSale(){
+		Vehicles vehForSale = new Vehicles();
+		ArrayList <Id<Vehicle>> vehIdForSale = new ArrayList<Id<Vehicle>>();
+		for(Map.Entry<Id<Vehicle>,Vehicle> entry : this.vehicles.getVehicles().entrySet()){
+			double rd = random.nextDouble();
+			if(sellUsedVeh(entry.getValue(),rd)){
+				vehForSale.getVehicles().put(entry.getKey(), entry.getValue()) ; 
+			}	
+		}
+		return vehForSale;
+	}
+	
+	private boolean sellUsedVeh(Vehicle veh, Double rand){
+		Drivetrain drivetrain = veh.getDt();
+		if(drivetrain.equals(Drivetrain.GASOLINE) && rand < 0.1645){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.DIESEL) && rand < 0.1665){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.NATURAL_GAS) && rand < 0.1687){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.HYBRID) && rand < 0.1361){
+			return true;
+		}else if(drivetrain.equals(Drivetrain.HYBRID) && rand < 0.1266){
+			return true;
+		}else{
+			return false;
+		}
+	}
+	private void writeSecondHandCarMarket(){
+		Vehicles example = chooseVehForSale();
+		log.info("Cars for sale in the secondhand car market: "+ example.getVehicles().size());
+		Households buyingHH = chooseBuyingHH();
+		log.info("Households buying used cars: "+ buyingHH.getHouseholds().size());
+		
+	}
+	
+	private Households chooseBuyingHH(){
+		Households buyingHH = new Households();
+		for(Map.Entry<Id<Household>,Household> entry : this.households.getHouseholds().entrySet()){
+			double rd = random.nextDouble();
+			if(rd<0.2){
+				buyingHH.getHouseholds().put(entry.getKey(), entry.getValue());
+			}
+		}
+		return buyingHH;
 	}
 }
