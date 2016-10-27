@@ -6,6 +6,7 @@ package org.fleet.types;
  */
 public enum Drivetrain {
 	
-	GASOLINE, DIESEL, NATURAL_GAS , FUEL_CELL, HYBRID, PHEV, BEV
+	BEV, DIESEL, FUEL_CELL, GASOLINE, HYBRID, NATURAL_GAS, PHEV;
+
 
 }

@@ -12,6 +12,8 @@ import org.fleet.types.Households;
 import org.fleet.types.Id;
 import org.fleet.types.Vehicle;
 import org.fleet.types.Vehicles;
+import org.fleet.utils.HouseholdUtils;
+import org.fleet.utils.VehicleUtils;
 
 
 /**
@@ -20,104 +22,97 @@ import org.fleet.types.Vehicles;
  */
 public class FleetModeling {
 	private static final Logger log = Logger.getLogger(FleetModeling.class.getName());
+
+	private final Random random;
+	private final int noOfVeh;
+	private final int noOfHH;
 	
-	private static final Random random = new Random(1331);
-	private static final int noOfHH = 1000;
-	private static final int noOfVeh = 1200;
-	private int gasolineCounter = 0;
-	private int dieselCounter = 0;
-	private int gasCounter = 0;
-	private int hybridCounter = 0;
-	private int bevCounter = 0;
-	
-	private Vehicles vehicles;
-	private List<Id<Vehicle>> assignedVeh;
-	private Households households;
+	private final Vehicles vehicles;
+	private final List<Id<Vehicle>> assignedVeh;
+	private final Households households;
 	//TODO: How to treat company-owned, but (mainly) privately-used vehicles?
 	//private Companies companies;
-	
-	public FleetModeling(){
+
+	private final HouseholdUtils hhUtils;
+	private final VehicleUtils vehUtils;
+
+	public FleetModeling(Random random, int noofveh, int noofhh){
+		this.random = random;
+		this.noOfVeh = noofveh;
+		this.noOfHH = noofhh;
+		
 		this.vehicles = new Vehicles();
 		this.assignedVeh = new ArrayList<Id<Vehicle>>();
 		this.households = new Households();
+		this.hhUtils = new HouseholdUtils();
+		this.vehUtils = new VehicleUtils();
 	}
 	
 	public void preprocess() {
+		log.info("Entering preprocessing...");
 		generateInitialVehicles();
 		generateInitialHouseholds();
-		writeInitialInformation();
+		log.info("Leaving preprocessing...");
 	}
 
 	public void run() {
+		log.info("Entering simulation...");
 //		scrapeVehicles();
-		//TODO: The following could be influenced by many factors, e.g. how many vehicles die
+		//The following could be influenced by many factors, e.g. how many vehicles die
+		//TODO: Benjamin
 //		generateNewVehicles();
 //		assignNewVehicles2HH();
+		//TODO: Marie
 //		modelSecondHandCarMarket();
+		log.info("Leaving simulation...");
 	}
 
 	public void postprocess() {
+		log.info("Entering postprocessing...");
 //		nothing so far
+		log.info("Leaving postprocessing...");
+		log.info("Shutting down.");
 	}
 	
-	private void writeInitialInformation() {
-		log.info("Created " + Drivetrain.GASOLINE + " vehicles: " + gasolineCounter);
-		log.info("Created " + Drivetrain.DIESEL + " vehicles: " + dieselCounter);
-		log.info("Created " + Drivetrain.NATURAL_GAS + " vehicles: " + gasCounter);
-		log.info("Created " + Drivetrain.HYBRID + " vehicles: " + hybridCounter);
-		log.info("Created " + Drivetrain.BEV + " vehicles: " + bevCounter);
-		
-		
-		int zeroVehCnt = 0;
-		int oneVehCnt = 0;
-		int twoVehCnt = 0;
-		int threeVehCnt = 0;
-		int fourVehCnt = 0;
-		int totalVehInHHCnt = 0;
-		for(Household hh : households.getHouseholds().values()){
-			int vehInHH = hh.getVehInHH().getVehicles().size();
-			totalVehInHHCnt += vehInHH;
-			if(vehInHH==0) zeroVehCnt++;
-			else if(vehInHH==1) oneVehCnt++;
-			else if(vehInHH==2) twoVehCnt++;
-			else if(vehInHH==3) threeVehCnt++;
-			else if(vehInHH==4) fourVehCnt++;
-			else throw new RuntimeException("This should not happen.");
+	private void writeInitialVehicleInformation() {
+		vehUtils.countDt2Vehicles(this.vehicles);
+		for(Drivetrain dt : vehUtils.getDtCount().keySet()){
+			log.info("Created " + dt + " vehicles: " + vehUtils.getDtCount().get(dt));
 		}
-		log.info("Households with zero vehicles: " + zeroVehCnt + " of " + households.getHouseholds().size() + " households.");
-		log.info("Households with one vehicles: " + oneVehCnt + " of " + households.getHouseholds().size() + " households.");
-		log.info("Households with two vehicles: " + twoVehCnt + " of " + households.getHouseholds().size() + " households.");
-		log.info("Households with three vehicles: " + threeVehCnt + " of " + households.getHouseholds().size() + " households.");
-		log.info("Households with four vehicles: " + fourVehCnt + " of " + households.getHouseholds().size() + " households.");
-		
-		log.info("In total, " + totalVehInHHCnt + " vehicles are assigned to households.");
-		log.info("Check sum: " + this.assignedVeh.size());
-		
-		int totalVehCnt = gasolineCounter + dieselCounter + gasCounter + hybridCounter + bevCounter;
-		int marketMismatchCnt = totalVehCnt - totalVehInHHCnt;
-		log.info("In total, " + marketMismatchCnt + " are left on the market."); //is always >= 0 because otherwise the HH did not get enough vehicles
+	}	
+	
+	private void writeInitialHouseholdInformation(){
+		hhUtils.countVehPerHH(this.households);
+		for(Integer vehInHHClass : hhUtils.getNoOfVeh2NoOfHHCount().keySet()){
+			log.info("Households with " + vehInHHClass + " vehicle(s): " + hhUtils.getNoOfVeh2NoOfHHCount().get(vehInHHClass) + " of " + households.getHouseholds().size() + " households.");
+		}
+		log.info("Vehicles assigned to households: " + hhUtils.getTotalVehInAllHHCnt() +  "(check sum: " + this.assignedVeh.size() + ").");
+		int marketMismatchCnt = vehUtils.getTotalVehCnt() - hhUtils.getTotalVehInAllHHCnt();
+		log.info("Vehicles not assigned to households: " + marketMismatchCnt); //is always >= 0 because otherwise some HH would not have gotten enough vehicles
 	}
 
 	private void generateInitialVehicles() {
-		log.info("Entering generateInitialVehicles");
+		log.info("Entering initial vehicle generation...");
 		for(int i=1;i<=noOfVeh;i++){
 			Id<Vehicle> vid = Id.createVehicleId(i);
 			Drivetrain dt = determineDrivetrain();
 			Vehicle veh = new Vehicle(vid, dt);
 			this.vehicles.addVehicle(veh);
 		}
-		log.info("Leaving generateInitialVehicles");
+		writeInitialVehicleInformation();
+		log.info("Leaving initial vehicle generation...");
 	}
 
 	private void generateInitialHouseholds() {
-		log.info("Entering generateInitialHouseholds");
+		log.info("Entering initial household generation...");
 		for(int i=1;i<=noOfHH;i++){
 			Id<Household> hid = Id.createHouseholdId(i);
 			Household hh = new Household(hid);
 			assignVehicles2HH(hh);
 			this.households.addHousehold(hh);
 		}
-		log.info("Leaving generateInitialHouseholds");
+		writeInitialHouseholdInformation();
+		log.info("Leaving initial household generation...");
 	}
 
 	private void assignVehicles2HH(Household hh) {
@@ -164,26 +159,21 @@ public class FleetModeling {
 		return noOfCars;
 	}
 
+	//TODO: not all drivetrains considered!
 	private Drivetrain determineDrivetrain() {
 		Drivetrain dt;
 		double rd = random.nextDouble();
 //		log.info("Random number: " + rd);
 		if(rd<0.662){
 			dt = Drivetrain.GASOLINE;
-			gasolineCounter++;
 		} else if(rd<0.984){
 			dt = Drivetrain.DIESEL;
-			dieselCounter++;
 		} else if(rd<0.9965){
 			dt = Drivetrain.NATURAL_GAS;
-			gasCounter++;
 		} else if(rd<0.9994){
 			dt = Drivetrain.HYBRID;
-			hybridCounter++;
 		} else{
-			//TODO: PHEV and FUEL_CELL not considered!
 			dt = Drivetrain.BEV;
-			bevCounter++;
 		}
 		return dt;
 	}

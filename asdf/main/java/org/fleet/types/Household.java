@@ -7,7 +7,6 @@ package org.fleet.types;
 public class Household {
 	private final Id<Household> id;
 	
-//	private Map<Id<Vehicle>, Vehicle> vehInHH;
 	private Vehicles vehInHH;
 	
 	public Household(final Id<Household> id){
