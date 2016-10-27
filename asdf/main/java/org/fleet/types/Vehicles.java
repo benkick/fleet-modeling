@@ -27,4 +27,11 @@ public class Vehicles {
 			throw new RuntimeException("Vehicle " + vehicle.getId() + " already exists. Aborting...");
 		}
 	}
+	public void removeVehicle(Vehicle vehicle){
+		if(vehicles.containsKey(vehicle.getId())){
+			vehicles.remove(vehicle.getId());
+		}else{
+			throw new RuntimeException("Vehicle" + vehicle.getId() + "does not exist in this household. Aborting...");
+		}
+	}
 }

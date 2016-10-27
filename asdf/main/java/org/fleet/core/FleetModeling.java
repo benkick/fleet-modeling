@@ -89,13 +89,32 @@ public class FleetModeling {
 	private void modelSecondHandCarMarket() {
 		Vehicles vehForSale = chooseVehiclesForSale();
 		log.info("Cars for sale in the secondhand car market: "+ vehForSale.getVehicles().size());
-		
-		Households buyingHH = chooseBuyingHHs();
-		log.info("Households buying used cars: "+ buyingHH.getHouseholds().size());
+		Households sellingHHs = takeVehiclesFromHH(vehForSale);
+		log.info("Number of households, which sold vehicles: " + sellingHHs.getHouseholds().size());
+		Households buyingHHs = chooseBuyingHHs(sellingHHs);
+		log.info("Households buying used cars: "+ buyingHHs.getHouseholds().size());
 		
 		clearSecondHandMarket();
 		
 		
+	}
+
+//	TODO: the if statement suppresses the throwing of the exception in the addHousehold method, but we add an household only when its not in the Households-Container yet... 
+	private Households takeVehiclesFromHH(Vehicles soldVehicles){
+		Households sellingHHs = new Households();
+		for(Household  hh : this.households.getHouseholds().values()){
+			for(Vehicle veh : soldVehicles.getVehicles().values()){
+				if(hh.getVehInHH().getVehicles().containsKey(veh.getId())){
+					hh.getVehInHH().removeVehicle(veh);
+					if(!sellingHHs.getHouseholds().containsKey(hh.getId())){
+						sellingHHs.addHousehold(hh);
+//					}else{
+//						log.info("Household " + hh.getId() + " is selling more than one car");
+					}
+				}
+			}
+		}
+		return sellingHHs;
 	}
 
 	private void clearSecondHandMarket() {
@@ -135,11 +154,19 @@ public class FleetModeling {
 		return sellVeh;
 	}
 
-	private Households chooseBuyingHHs(){
+//  TODO: Now the probability for a vehicle purchase is a bit distorted, because HHs which sold more than one vehicle appear only once
+	/*
+	 * assumption: 80% of the households, that sold cars will buy a "new" used vehicle
+	 * implication(some probability theory): 6,51 % of the households, that didn't sell cars, will buy a new old one 
+	 */
+	private Households chooseBuyingHHs(Households sellingHHs){
 		Households buyingHHs = new Households();
 		for(Household hh : this.households.getHouseholds().values()){
 			double rd = random.nextDouble();
-			if(rd<0.2){
+			if (!(sellingHHs.getHouseholds().containsKey(hh.getId())) && rd<0.0651){
+				buyingHHs.addHousehold(hh);
+			}
+			else if(sellingHHs.getHouseholds().containsKey(hh.getId()) && rd<0.8){
 				buyingHHs.addHousehold(hh);
 			}
 		}
