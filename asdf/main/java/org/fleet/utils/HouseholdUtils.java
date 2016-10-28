@@ -12,14 +12,15 @@ import org.fleet.types.Households;
  */
 public class HouseholdUtils {
 	Map<Integer, Integer> noOfVeh2NoOfHHCnt;
-	int totalVehInAllHHCnt;
+	Integer totalVehInAllHHCnt;
 	
 	public HouseholdUtils(){
 		this.noOfVeh2NoOfHHCnt = new HashMap<>();
-		this.totalVehInAllHHCnt = 0;
+		this.totalVehInAllHHCnt = null;
 	}
 
 	public void countVehPerHH(Households households){
+		this.totalVehInAllHHCnt = 0;
 		for(Household hh : households.getHouseholds().values()){
 			int vehInHH = hh.getVehInHH().getVehicles().size();
 			totalVehInAllHHCnt += vehInHH;
@@ -37,7 +38,7 @@ public class HouseholdUtils {
 		return noOfVeh2NoOfHHCnt;
 	}
 
-	public int getTotalVehInAllHHCnt() {
+	public Integer getTotalVehInAllHHCnt() {
 		return totalVehInAllHHCnt;
 	}
 }

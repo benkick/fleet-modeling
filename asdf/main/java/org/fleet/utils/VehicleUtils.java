@@ -14,19 +14,20 @@ import org.fleet.types.Vehicles;
  */
 public class VehicleUtils {
 	SortedMap<Drivetrain, Integer> dtCnt;
-	int totalVehCnt;
+	Integer totalVehCnt;
 
 	public VehicleUtils(){
 		this.dtCnt = new TreeMap<>();
 		for(Drivetrain drive : Drivetrain.values()){ //populate dtCnt with all dt, so no dt is forgotten
 			this.dtCnt.put(drive, 0);
 		}
-		this.totalVehCnt = 0;
+		this.totalVehCnt = null;
 	}
 	
 	public void countDt2Vehicles(Vehicles vehicles) {
+		this.totalVehCnt = 0;
 		for(Vehicle veh : vehicles.getVehicles().values()){
-			totalVehCnt++;
+			this.totalVehCnt++;
 			Drivetrain dt = veh.getDt();
 			int cntSoFar = dtCnt.get(dt);
 			int cntNew = cntSoFar+1;
@@ -38,7 +39,7 @@ public class VehicleUtils {
 		return dtCnt;
 	}
 
-	public int getTotalVehCnt() {
+	public Integer getTotalVehCnt() {
 		return totalVehCnt;
 	}
 }

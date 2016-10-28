@@ -2,7 +2,6 @@ package org.fleet.core;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -12,9 +11,7 @@ import org.fleet.types.Households;
 import org.fleet.types.Id;
 import org.fleet.types.Vehicle;
 import org.fleet.types.Vehicles;
-import org.fleet.utils.HouseholdUtils;
-import org.fleet.utils.VehicleUtils;
-
+import org.fleet.utils.PrintConsoleUtils;
 
 /**
  * @author benkick
@@ -27,7 +24,7 @@ public class FleetModeling {
 	private final Random random;
 	private final int noOfVeh;
 	private final int noOfHH;
-	private int baseYear;
+	private int currentYear;
 	
 	private final Vehicles vehicles;
 	private final List<Id<Vehicle>> assignedVeh;
@@ -35,24 +32,22 @@ public class FleetModeling {
 	private final Households households;
 	//TODO: How to treat company-owned, but (mainly) privately-used vehicles?
 	//private Companies companies;
-
-	private final HouseholdUtils hhUtils;
-	private final VehicleUtils vehUtils;
-
+	
+	private final PrintConsoleUtils printUtils;
 
 	public FleetModeling(Random random, int noofveh, int noofhh, int baseyear){
 		this.random = random;
 		this.noOfVeh = noofveh;
 		this.noOfHH = noofhh;
-		this.baseYear = baseyear;
+		this.currentYear = baseyear;
 		
 		this.vehicles = new Vehicles();
 		//TODO: is assignedVeh really needed?
 		this.assignedVeh = new ArrayList<Id<Vehicle>>();
 		this.remainingVeh = new ArrayList<Id<Vehicle>>();
 		this.households = new Households();
-		this.hhUtils = new HouseholdUtils();
-		this.vehUtils = new VehicleUtils();
+		
+		this.printUtils = new PrintConsoleUtils();
 	}
 	
 	public void preprocess() {
@@ -64,18 +59,20 @@ public class FleetModeling {
 
 	public void run(int iterations) {
 		log.info("Entering simulation...");
+		VehicleScrapage scr = new VehicleScrapage();
+		PrimaryMarket pcm = new PrimaryMarket();
+		SecondhandMarket scm = new SecondhandMarket(this.random);
 		for(int i=0; i<iterations; i++){
-			log.info("=================================================");
-			log.info("Simulating transactions for year " + this.baseYear);
-			log.info("=================================================");
-//			scrapeVehicles();
-			//The following could be influenced by many factors, e.g. how many vehicles die
+			log.info("\n=================================================\n"
+					+ "Simulating transactions for year " + this.currentYear + "\n"
+					+ "=================================================");
+			//TODO: 
+			scr.scrapeVehicles();
 			//TODO: Benjamin
-//			generateNewVehicles();
-//			assignNewVehicles2HH();
+			pcm.model();
 			//TODO: Marie
-			modelSecondHandCarMarket();
-			this.baseYear += 1;
+			scm.model(this.households, this.vehicles, this.assignedVeh);
+			this.currentYear += 1;
 		}
 		log.info("Leaving simulation...");
 	}
@@ -85,143 +82,6 @@ public class FleetModeling {
 //		nothing so far
 		log.info("Leaving postprocessing...");
 		log.info("Shutting down.");
-	}
-	
-	private void modelSecondHandCarMarket() {
-		Vehicles vehForSale = chooseVehiclesForSale();
-		log.info("Cars for sale in the secondhand car market: "+ vehForSale.getVehicles().size());
-		Households sellingHHs = takeVehiclesFromHH(vehForSale);
-		log.info("Number of households, which sold vehicles: " + sellingHHs.getHouseholds().size());
-		Households buyingHHs = chooseBuyingHHs(sellingHHs);
-		log.info("Households buying used cars: "+ buyingHHs.getHouseholds().size());
-		
-		clearSecondHandMarket();
-		
-		
-	}
-
-//	TODO: the if statement suppresses the throwing of the exception in the addHousehold method, but we add an household only when its not in the Households-Container yet...
-	
-	/**
-	 * This method determines the households which sold vehicles and removes the vehicle from the household's vehInHH-container.
-	 * 
-	 * @param soldVehicles the vehicles that have been sold
-	 * @return the households which sold cars
-	 */
-	private Households takeVehiclesFromHH(Vehicles soldVehicles){
-		Households sellingHHs = new Households();
-		for(Household  hh : this.households.getHouseholds().values()){
-			for(Vehicle veh : soldVehicles.getVehicles().values()){
-				if(hh.getVehInHH().getVehicles().containsKey(veh.getId())){
-					hh.getVehInHH().removeVehicle(veh);
-					if(!sellingHHs.getHouseholds().containsKey(hh.getId())){
-						sellingHHs.addHousehold(hh);
-//					}else{
-//						log.info("Household " + hh.getId() + " is selling more than one car");
-					}
-				}
-			}
-		}
-		return sellingHHs;
-	}
-
-	private void clearSecondHandMarket() {
-		// TODO Auto-generated method stub
-		
-	}
-
-	/**
-	 * This method computes the used vehicles that should be sold this year using the method markVehForSale.
-	 * 
-	 * @see markVehForSale 
-	 * @return the vehicles that should be sold
-	 */
-	private Vehicles chooseVehiclesForSale(){
-		Vehicles vehForSale = new Vehicles();
-		for(Id<Vehicle> vid : this.assignedVeh){
-			Vehicle veh = this.vehicles.getVehicles().get(vid);
-			if(markVehForSale(veh)){
-				vehForSale.addVehicle(veh);
-			}
-		}
-		return vehForSale;
-	}
-
-	/**
-	 * This method determines if the given vehicle will be sold or not, depending on the drivetrain of the vehicle.
-	 * Probabilities were taken from the KBA website and then converted to the needed conditional probabilities.
-	 * <p>
-	 * See <a href= "http://www.kba.de/DE/Statistik/Fahrzeuge/Besitzumschreibungen/Umwelt/2015_u_umwelt_dusl.html?nn=664062">http://www.kba.de</a>
-	 * 
-	 * 
-	 * @param veh the vehicle that should be sold or not
-	 * @return true or false
-	 * 
-	 */
-	private boolean markVehForSale(Vehicle veh){
-		double rand = random.nextDouble();
-		Drivetrain drivetrain = veh.getDt();
-		boolean sellVeh = false;
-
-		if(drivetrain.equals(Drivetrain.GASOLINE)){
-			if(rand < 0.1645) sellVeh = true;
-		}else if(drivetrain.equals(Drivetrain.DIESEL)){
-			if(rand < 0.1665) sellVeh = true;
-		}else if(drivetrain.equals(Drivetrain.NATURAL_GAS)){
-			if(rand < 0.1687) sellVeh = true;
-		}else if(drivetrain.equals(Drivetrain.HYBRID)){
-			if(rand < 0.1361) sellVeh = true;
-		}else if(drivetrain.equals(Drivetrain.BEV)){
-			if(rand < 0.1266) sellVeh = true;
-		}else{
-			throw new RuntimeException("No transaction probability defined for drivetrain " + drivetrain + ". Aborting...");
-		}
-		return sellVeh;
-	}
-
-//  TODO: Now the probability for a vehicle purchase is a bit distorted, because HHs which sold more than one vehicle appear only once
-	/*
-	 * assumption: 80% of the households, that sold cars will buy a "new" used vehicle
-	 * implication(some probability theory): 6,51 % of the households, that didn't sell cars, will buy a new old one 
-	 */
-	/**
-	 * This method chooses the households which will buy used cars.
-	 * <p>
-	 * We assume that the probability to buy a used car is 80% if the household sold a car this year.
-	 * The probability to buy a car is much lower if no car was sold. 
-	 * 
-	 * @param sellingHHs the households which sold cars this year 
-	 * @return the households which want to buy used cars 
-	 */
-	private Households chooseBuyingHHs(Households sellingHHs){
-		Households buyingHHs = new Households();
-		for(Household hh : this.households.getHouseholds().values()){
-			double rd = random.nextDouble();
-			if (!(sellingHHs.getHouseholds().containsKey(hh.getId())) && rd<0.0651){
-				buyingHHs.addHousehold(hh);
-			}
-			else if(sellingHHs.getHouseholds().containsKey(hh.getId()) && rd<0.8){
-				buyingHHs.addHousehold(hh);
-			}
-		}
-		return buyingHHs;
-	}
-
-	private void writeInitialVehicleInformation() {
-		vehUtils.countDt2Vehicles(this.vehicles);
-		for(Drivetrain dt : vehUtils.getDtCount().keySet()){
-			log.info("Created " + dt + " vehicles: " + vehUtils.getDtCount().get(dt));
-		}
-	}	
-	
-	private void writeInitialHouseholdInformation(){
-		hhUtils.countVehPerHH(this.households);
-		for(Integer vehInHHClass : hhUtils.getNoOfVeh2NoOfHHCount().keySet()){
-			log.info("Households with " + vehInHHClass + " vehicle(s): " + hhUtils.getNoOfVeh2NoOfHHCount().get(vehInHHClass) + " of " + households.getHouseholds().size() + " households.");
-		}
-		log.info("Vehicles assigned to households: " + hhUtils.getTotalVehInAllHHCnt() +  " (check sum: " + this.assignedVeh.size() + ").");
-		int marketMismatchCnt = vehUtils.getTotalVehCnt() - hhUtils.getTotalVehInAllHHCnt();
-		log.info("Vehicles not assigned to households: " + marketMismatchCnt); //is always >= 0 because otherwise some HH would not have gotten enough vehicles
 	}
 
 	private void generateInitialVehicles() {
@@ -233,7 +93,7 @@ public class FleetModeling {
 			this.vehicles.addVehicle(veh);
 			this.remainingVeh.add(veh.getId());
 		}
-		writeInitialVehicleInformation();
+		this.printUtils.printVehicleInformation(this.vehicles);
 		log.info("Leaving initial vehicle generation...");
 	}
 
@@ -245,13 +105,13 @@ public class FleetModeling {
 			assignVehicles2HH(hh);
 			this.households.addHousehold(hh);
 		}
-		writeInitialHouseholdInformation();
+		this.printUtils.printHouseholdInformation(this.households);
+		this.printUtils.printMarketMissmatchInformation(this.households, this.vehicles);
 		log.info("Leaving initial household generation...");
 	}
-
 	
 	/**
-	 * This method assigns a vehicle to the given household, depending on the number of vehicles that the household should have.
+	 * This method assigns vehicle(s) to a household, using a distribution of the number of vehicles per household.
 	 * 
 	 * @param hh the household that should get a vehicle
 	 * @see chooseVehicle
@@ -265,9 +125,9 @@ public class FleetModeling {
 	}
 
 	/**
-	 * This method chooses the vehicle that should be assigned to the household.
+	 * This method chooses a random vehicle from the available vehicles.
 	 * 
-	 * @return the vehicle that should be assigned  to the household
+	 * @return chosenVeh a random vehicle
 	 * @see assignVehicles2HH
 	 */
 	private Vehicle chooseVehicle(){
@@ -284,6 +144,14 @@ public class FleetModeling {
 		return chosenVeh;
 	}
 
+	/**
+	 * This method determines the number of vehicles a household has in the beginning.
+	 * Probabilities are taken from a ADAC study.
+	 * <p>
+	 * See <a href=https://www.adac.de/_mmm/pdf/statistik_mobilitaet_in_deutschland_0111_46603.pdf>https://www.adac.de</a>
+	 * 
+	 * @return number of vehicles of a household.
+	 */
 	private Integer determineNoOfVehInHH() {
 		Integer noOfCars;
 		double rd = random.nextDouble();
@@ -296,6 +164,14 @@ public class FleetModeling {
 		return noOfCars;
 	}
 
+	/**
+	 * This method determines the drivetrain of a vehicle.
+	 * Probabilities are taken from an initial distribution on the KBA website.
+	 * <p>
+	 * See <a http://www.kba.de/DE/Statistik/Fahrzeuge/Bestand/Umwelt/2016_b_umwelt_dusl.html>http://www.kba.de</a>
+	 * 
+	 * @return dt the drivetrain of a vehicle 
+	 */
 	private Drivetrain determineDrivetrain() {
 		Drivetrain dt;
 		double rd = random.nextDouble();

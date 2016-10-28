@@ -14,7 +14,7 @@ public class RunFleetModeling {
 	private final static int noOfVeh = 12000;
 	private final static int noOfHH = 10000;
 	private final static int baseYear = 2016;
-	private final static int noOfIterations = 1;
+	private final static int noOfIterations = 10;
 
 	public static void main(String[] args) {
 		FleetModeling fleetModeling = new FleetModeling(
