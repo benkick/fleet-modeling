@@ -20,6 +20,7 @@ import org.fleet.utils.VehicleUtils;
  * @author benkick
  *
  */
+
 public class FleetModeling {
 	private static final Logger log = Logger.getLogger(FleetModeling.class.getName());
 
@@ -99,7 +100,14 @@ public class FleetModeling {
 		
 	}
 
-//	TODO: the if statement suppresses the throwing of the exception in the addHousehold method, but we add an household only when its not in the Households-Container yet... 
+//	TODO: the if statement suppresses the throwing of the exception in the addHousehold method, but we add an household only when its not in the Households-Container yet...
+	
+	/**
+	 * This method determines the households which sold vehicles and removes the vehicle from the household's vehInHH-container.
+	 * 
+	 * @param soldVehicles the vehicles that have been sold
+	 * @return the households which sold cars
+	 */
 	private Households takeVehiclesFromHH(Vehicles soldVehicles){
 		Households sellingHHs = new Households();
 		for(Household  hh : this.households.getHouseholds().values()){
@@ -122,6 +130,12 @@ public class FleetModeling {
 		
 	}
 
+	/**
+	 * This method computes the used vehicles that should be sold this year using the method markVehForSale.
+	 * 
+	 * @see markVehForSale 
+	 * @return the vehicles that should be sold
+	 */
 	private Vehicles chooseVehiclesForSale(){
 		Vehicles vehForSale = new Vehicles();
 		for(Id<Vehicle> vid : this.assignedVeh){
@@ -133,6 +147,17 @@ public class FleetModeling {
 		return vehForSale;
 	}
 
+	/**
+	 * This method determines if the given vehicle will be sold or not, depending on the drivetrain of the vehicle.
+	 * Probabilities were taken from the KBA website and then converted to the needed conditional probabilities.
+	 * <p>
+	 * See <a href= "http://www.kba.de/DE/Statistik/Fahrzeuge/Besitzumschreibungen/Umwelt/2015_u_umwelt_dusl.html?nn=664062">http://www.kba.de</a>
+	 * 
+	 * 
+	 * @param veh the vehicle that should be sold or not
+	 * @return true or false
+	 * 
+	 */
 	private boolean markVehForSale(Vehicle veh){
 		double rand = random.nextDouble();
 		Drivetrain drivetrain = veh.getDt();
@@ -158,6 +183,15 @@ public class FleetModeling {
 	/*
 	 * assumption: 80% of the households, that sold cars will buy a "new" used vehicle
 	 * implication(some probability theory): 6,51 % of the households, that didn't sell cars, will buy a new old one 
+	 */
+	/**
+	 * This method chooses the households which will buy used cars.
+	 * <p>
+	 * We assume that the probability to buy a used car is 80% if the household sold a car this year.
+	 * The probability to buy a car is much lower if no car was sold. 
+	 * 
+	 * @param sellingHHs the households which sold cars this year 
+	 * @return the households which want to buy used cars 
 	 */
 	private Households chooseBuyingHHs(Households sellingHHs){
 		Households buyingHHs = new Households();
@@ -215,6 +249,13 @@ public class FleetModeling {
 		log.info("Leaving initial household generation...");
 	}
 
+	
+	/**
+	 * This method assigns a vehicle to the given household, depending on the number of vehicles that the household should have.
+	 * 
+	 * @param hh the household that should get a vehicle
+	 * @see chooseVehicle
+	 */
 	private void assignVehicles2HH(Household hh) {
 		Integer noOfVehInHH = determineNoOfVehInHH();
 		for(int vehCnt=0; vehCnt<noOfVehInHH; vehCnt++){ //avoids adding a vehicle for noOfVehInHH = 0
@@ -223,6 +264,12 @@ public class FleetModeling {
 		}
 	}
 
+	/**
+	 * This method chooses the vehicle that should be assigned to the household.
+	 * 
+	 * @return the vehicle that should be assigned  to the household
+	 * @see assignVehicles2HH
+	 */
 	private Vehicle chooseVehicle(){
 		Id<Vehicle> chosenVehId = null;
 		Vehicle chosenVeh = null;
@@ -266,8 +313,4 @@ public class FleetModeling {
 		}
 		return dt;
 	}
-	//private void modelSecondHandCarMarket(){
-	//	Vehicles vehForSale = chooseVehForSale();
-	//	Households buyingHH = chooseBuyingHH();
-	//}
 }
