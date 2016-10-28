@@ -25,8 +25,13 @@ public class VehicleScrapping {
 			boolean scrap = checkForFailure(vehAge);
 			if(scrap){
 				//TODO: households etc.
-				assignedVeh.remove(veh);
+				assignedVeh.remove(veh.getId());
 				scrappedCnt++;
+			}
+		}
+		for(Id<Vehicle> vid : assignedVeh){
+			if(vehicles.getVehicles().get(vid) == null){
+				vehicles.removeVehicle(vehicles.getVehicles().get(vid));
 			}
 		}
 		log.info("Scrapped vehicles: " + scrappedCnt);
@@ -37,10 +42,10 @@ public class VehicleScrapping {
 		if(vehAge<=5){
 			//do nothing; minimum vehicle age is 5.
 		} else if(vehAge<=20){
-			//TODO: adjust
-			failure = true;
-		} else if(vehAge<=30){
 			//TODO
+		} else if(vehAge<=30){
+			//TODO: adjust!
+			failure = true;
 		} else {
 			//TODO
 //			throw new RuntimeException("This case is not considered yet. Aborting...");
