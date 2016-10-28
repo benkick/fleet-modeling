@@ -26,7 +26,7 @@ public class UsedVehicleMarket {
 
 	void model(Households households, Vehicles vehicles, List<Id<Vehicle>> assignedVeh) {
 		log.info("\n" 
-				+ "Simulating second-hand market \n"
+				+ "Simulating used vehicle market \n"
 				+ "*************************************************");
 		Vehicles vehForSale = chooseVehiclesForSale(vehicles, assignedVeh);
 		Households sellingHHs = chooseSellingHHs(vehForSale, households);
