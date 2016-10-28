@@ -42,7 +42,6 @@ public class FleetModeling {
 		this.currentYear = baseyear;
 		
 		this.vehicles = new Vehicles();
-		//TODO: is assignedVeh really needed?
 		this.assignedVeh = new ArrayList<Id<Vehicle>>();
 		this.remainingVeh = new ArrayList<Id<Vehicle>>();
 		this.households = new Households();
@@ -60,8 +59,8 @@ public class FleetModeling {
 	public void run(int iterations) {
 		log.info("Entering simulation...");
 		VehicleScrapage scr = new VehicleScrapage();
-		PrimaryMarket pcm = new PrimaryMarket();
-		SecondhandMarket scm = new SecondhandMarket(this.random);
+		NewVehicleMarket nvm = new NewVehicleMarket();
+		UsedVehicleMarket uvm = new UsedVehicleMarket(this.random);
 		for(int i=0; i<iterations; i++){
 			log.info("\n=================================================\n"
 					+ "Simulating transactions for year " + this.currentYear + "\n"
@@ -69,9 +68,9 @@ public class FleetModeling {
 			//TODO: 
 			scr.scrapeVehicles();
 			//TODO: Benjamin
-			pcm.model();
+			nvm.model();
 			//TODO: Marie
-			scm.model(this.households, this.vehicles, this.assignedVeh);
+			uvm.model(this.households, this.vehicles, this.assignedVeh);
 			this.currentYear += 1;
 		}
 		log.info("Leaving simulation...");

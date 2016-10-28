@@ -15,12 +15,12 @@ import org.fleet.types.Vehicles;
  * @author bolz_ma, benkick
  *
  */
-public class SecondhandMarket {
-	private static final Logger log = Logger.getLogger(SecondhandMarket.class.getName());
+public class UsedVehicleMarket {
+	private static final Logger log = Logger.getLogger(UsedVehicleMarket.class.getName());
 	
 	private final Random random;
 
-	public SecondhandMarket(Random random) {
+	public UsedVehicleMarket(Random random) {
 		this.random = random;
 	}
 
@@ -31,7 +31,7 @@ public class SecondhandMarket {
 		Vehicles vehForSale = chooseVehiclesForSale(vehicles, assignedVeh);
 		Households sellingHHs = chooseSellingHHs(vehForSale, households);
 		Households buyingHHs = chooseBuyingHHs(sellingHHs, households);
-		//TODO: Clear the market.
+		//TODO: Clear the market: swap vehicles.
 	}
 	
 	/**
