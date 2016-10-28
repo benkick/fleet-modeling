@@ -29,11 +29,9 @@ public class SecondhandMarket {
 				+ "Simulating second-hand market \n"
 				+ "*************************************************");
 		Vehicles vehForSale = chooseVehiclesForSale(vehicles, assignedVeh);
-		log.info("Vehicles for sale on second-hand market: "+ vehForSale.getVehicles().size());
 		Households sellingHHs = chooseSellingHHs(vehForSale, households);
-		log.info("Number of households selling at least one vehicle: " + sellingHHs.getHouseholds().size());
 		Households buyingHHs = chooseBuyingHHs(sellingHHs, households);
-		log.info("Number of households buying (at least?) one second-hand vehicle: "+ buyingHHs.getHouseholds().size());
+		//TODO: Clear the market.
 	}
 	
 	/**
@@ -55,6 +53,7 @@ public class SecondhandMarket {
 			}
 			if(isSelling) sellingHHs.addHousehold(hh);
 		}
+		log.info("Number of households selling at least one vehicle: " + sellingHHs.getHouseholds().size());
 		return sellingHHs;
 	}
 
@@ -74,6 +73,7 @@ public class SecondhandMarket {
 				vehForSale.addVehicle(veh);
 			}
 		}
+		log.info("Vehicles for sale on second-hand market: "+ vehForSale.getVehicles().size());
 		return vehForSale;
 	}
 
@@ -136,6 +136,7 @@ public class SecondhandMarket {
 			}
 			if(isBuying) buyingHHs.addHousehold(hh);
 		}
+		log.info("Number of households buying (at least?) one second-hand vehicle: "+ buyingHHs.getHouseholds().size());
 		return buyingHHs;
 	}
 }
