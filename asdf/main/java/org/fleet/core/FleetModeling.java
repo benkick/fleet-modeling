@@ -26,12 +26,12 @@ public class FleetModeling {
 	private final int noOfHH;
 	private int currentYear;
 	
-	private final Vehicles vehicles;
+	private Vehicles vehicles;
 	private final List<Id<Vehicle>> assignedVeh;
 	private final List<Id<Vehicle>> remainingVeh;
 	private final Households households;
 	//TODO: How to treat company-owned, but (mainly) privately-used vehicles?
-	//private Companies companies;
+//	private Companies companies;
 	
 	private final PrintConsoleUtils printUtils;
 
@@ -59,6 +59,7 @@ public class FleetModeling {
 
 	public void run(int iterations) {
 		log.info("Entering simulation...");
+		HouseholdUpdater hhu = new HouseholdUpdater();
 		VehicleScrapping scr = new VehicleScrapping(this.random);
 		NewVehicleMarket nvm = new NewVehicleMarket();
 		UsedVehicleMarket uvm = new UsedVehicleMarket(this.random);
@@ -67,20 +68,31 @@ public class FleetModeling {
 					+ "Simulating transactions for year " + this.currentYear + "\n"
 					+ "=================================================");
 			
-			//TODO: Benjamin
-			log.info("# of vehicles: " + this.vehicles.getVehicles().size());
-			log.info("# of assigned vehicles: " + this.assignedVeh.size());
-			scr.scrapVehicles(this.vehicles, this.assignedVeh, this.currentYear);
-			log.info("# of vehicles: " + this.vehicles.getVehicles().size());
-			log.info("# of assigned vehicles: " + this.assignedVeh.size());
+			/*
+			 * TODO:
+			 * - Fill with life
+			 */
+			hhu.updateHouseholds(this.households);
 			
-			//TODO: Benjamin
+			/*
+			 * TODO:
+			 * - Correct repeated draws
+			 * - Make vehicle removal simultaneous and faster?
+			 */
+			scr.scrapVehicles(this.vehicles, this.assignedVeh, this.households, this.currentYear);
+			
+			/*
+			 * TODO: Benjamin
+			 */
 //			nvm.model();
 			
-			//TODO: Marie
+			/*
+			 * TODO: Marie
+			 */
 //			uvm.model(this.households, this.vehicles, this.assignedVeh);
 			
-//			this.printUtils.printVehicleInformation(this.vehicles, this.currentYear);
+			this.printUtils.printVehicleInformation(this.vehicles, this.currentYear);
+			this.printUtils.printHouseholdInformation(this.households);
 			
 			this.currentYear += 1;
 		}
@@ -193,6 +205,7 @@ public class FleetModeling {
 	 * @return year of manufacture
 	 */
 	private int determineYearOfManufacture() {
+//		int ym = 2016;
 		int ym = 0;
 		double rd = random.nextDouble();
 		if(rd<0.375){
