@@ -26,7 +26,10 @@ public class FleetModeling {
 	private final int noOfHH;
 	private int currentYear;
 	
-	private final Vehicles vehicles;
+	/* TODO: How to deal with modifications to vehicles, households etc?
+	 * Getter? Returning functions? ...?
+	 */
+	private Vehicles vehicles;
 	private final List<Id<Vehicle>> assignedVeh;
 	private final List<Id<Vehicle>> remainingVeh;
 	private final Households households;
@@ -70,7 +73,7 @@ public class FleetModeling {
 			//TODO: Benjamin
 			log.info("# of vehicles: " + this.vehicles.getVehicles().size());
 			log.info("# of assigned vehicles: " + this.assignedVeh.size());
-			scr.scrapVehicles(this.vehicles, this.assignedVeh, this.currentYear);
+			this.vehicles = scr.scrapVehicles(this.vehicles, this.assignedVeh, this.currentYear);
 			log.info("# of vehicles: " + this.vehicles.getVehicles().size());
 			log.info("# of assigned vehicles: " + this.assignedVeh.size());
 			
@@ -193,49 +196,50 @@ public class FleetModeling {
 	 * @return year of manufacture
 	 */
 	private int determineYearOfManufacture() {
-		int ym = 0;
-		double rd = random.nextDouble();
-		if(rd<0.375){
-			double rand = random.nextDouble();
-			if(rand<0.2) ym = this.currentYear - 1;
-			else if(rand<0.4) ym = this.currentYear - 2;
-			else if(rand<0.6) ym = this.currentYear - 3;
-			else if(rand<0.8) ym = this.currentYear - 4;
-			else ym = this.currentYear - 5;
-		} else if(rd<0.6875){
-			double rand = random.nextDouble();
-			if(rand<0.2) ym = this.currentYear - 6;
-			else if(rand<0.4) ym = this.currentYear - 7;
-			else if(rand<0.6) ym = this.currentYear - 8;
-			else if(rand<0.8) ym = this.currentYear - 9;
-			else ym = this.currentYear - 10;
-		} else if(rd<0.875){
-			double rand = random.nextDouble();
-			if(rand<0.2) ym = this.currentYear - 11;
-			else if(rand<0.4) ym = this.currentYear - 12;
-			else if(rand<0.6) ym = this.currentYear - 13;
-			else if(rand<0.8) ym = this.currentYear - 14;
-			else ym = this.currentYear - 15;
-		} else if(rd<0.9625){
-			double rand = random.nextDouble();
-			if(rand<0.2) ym = this.currentYear - 16;
-			else if(rand<0.4) ym = this.currentYear - 17;
-			else if(rand<0.6) ym = this.currentYear - 18;
-			else if(rand<0.8) ym = this.currentYear - 19;
-			else ym = this.currentYear - 20;
-		} else {
-			double rand = random.nextDouble();
-			if(rand<0.1) ym = this.currentYear - 21;
-			else if(rand<0.2) ym = this.currentYear - 22;
-			else if(rand<0.3) ym = this.currentYear - 23;
-			else if(rand<0.4) ym = this.currentYear - 24;
-			else if(rand<0.5) ym = this.currentYear - 25;
-			else if(rand<0.6) ym = this.currentYear - 26;
-			else if(rand<0.7) ym = this.currentYear - 27;
-			else if(rand<0.8) ym = this.currentYear - 28;
-			else if(rand<0.9) ym = this.currentYear - 29;
-			else ym = this.currentYear - 30;
-		}
+		int ym = 2010;
+//		int ym = 0;
+//		double rd = random.nextDouble();
+//		if(rd<0.375){
+//			double rand = random.nextDouble();
+//			if(rand<0.2) ym = this.currentYear - 1;
+//			else if(rand<0.4) ym = this.currentYear - 2;
+//			else if(rand<0.6) ym = this.currentYear - 3;
+//			else if(rand<0.8) ym = this.currentYear - 4;
+//			else ym = this.currentYear - 5;
+//		} else if(rd<0.6875){
+//			double rand = random.nextDouble();
+//			if(rand<0.2) ym = this.currentYear - 6;
+//			else if(rand<0.4) ym = this.currentYear - 7;
+//			else if(rand<0.6) ym = this.currentYear - 8;
+//			else if(rand<0.8) ym = this.currentYear - 9;
+//			else ym = this.currentYear - 10;
+//		} else if(rd<0.875){
+//			double rand = random.nextDouble();
+//			if(rand<0.2) ym = this.currentYear - 11;
+//			else if(rand<0.4) ym = this.currentYear - 12;
+//			else if(rand<0.6) ym = this.currentYear - 13;
+//			else if(rand<0.8) ym = this.currentYear - 14;
+//			else ym = this.currentYear - 15;
+//		} else if(rd<0.9625){
+//			double rand = random.nextDouble();
+//			if(rand<0.2) ym = this.currentYear - 16;
+//			else if(rand<0.4) ym = this.currentYear - 17;
+//			else if(rand<0.6) ym = this.currentYear - 18;
+//			else if(rand<0.8) ym = this.currentYear - 19;
+//			else ym = this.currentYear - 20;
+//		} else {
+//			double rand = random.nextDouble();
+//			if(rand<0.1) ym = this.currentYear - 21;
+//			else if(rand<0.2) ym = this.currentYear - 22;
+//			else if(rand<0.3) ym = this.currentYear - 23;
+//			else if(rand<0.4) ym = this.currentYear - 24;
+//			else if(rand<0.5) ym = this.currentYear - 25;
+//			else if(rand<0.6) ym = this.currentYear - 26;
+//			else if(rand<0.7) ym = this.currentYear - 27;
+//			else if(rand<0.8) ym = this.currentYear - 28;
+//			else if(rand<0.9) ym = this.currentYear - 29;
+//			else ym = this.currentYear - 30;
+//		}
 		return ym;
 	}
 

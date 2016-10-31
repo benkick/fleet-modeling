@@ -21,7 +21,7 @@ public class VehicleScrapping {
 		this.random = random;
 	}
 
-	public void scrapVehicles(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, int currentYear) {
+	public Vehicles scrapVehicles(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, int currentYear) {
 		log.info("\n" 
 				+ "Scrapping vehicles \n"
 				+ "-------------------------------------------------");
@@ -31,13 +31,14 @@ public class VehicleScrapping {
 			int vehAge = currentYear - veh.getYm();
 			boolean scrap = checkForFailure(vehAge);
 			if(scrap){
-				//TODO: households etc.
+				//TODO: Remove from households etc.
 				assignedVeh.remove(veh.getId());
 				vehicles.getVehicles().remove(veh);
 				scrappedCnt++;
 			}
 		}
 		log.info("Scrapped vehicles: " + scrappedCnt);
+		return vehicles;
 	}
 
 	/**
@@ -68,7 +69,7 @@ public class VehicleScrapping {
 			throw new RuntimeException("This case is not considered yet. Aborting...");
 		}
 		if(rd>survivalProb) failure = true;
-		if(failure == true) System.out.println(vehAge + "; " +  rd + "; " + survivalProb);
+//		if(failure) System.out.println(vehAge + "; " +  rd + "; " + survivalProb);
 		return failure;
 	}
 }

@@ -11,8 +11,8 @@ import org.fleet.core.FleetModeling;
 public class RunFleetModeling {
 	
 	private final static Random random = new Random(1331);
-	private final static int noOfVeh = 12;
-	private final static int noOfHH = 10;
+	private final static int noOfVeh = 120;
+	private final static int noOfHH = 100;
 	private final static int baseYear = 2016;
 	private final static int noOfIterations = 1;
 
