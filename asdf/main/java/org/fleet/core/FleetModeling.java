@@ -59,7 +59,7 @@ public class FleetModeling {
 
 	public void run(int iterations) {
 		log.info("Entering simulation...");
-		VehicleScrapping scr = new VehicleScrapping();
+		VehicleScrapping scr = new VehicleScrapping(this.random);
 		NewVehicleMarket nvm = new NewVehicleMarket();
 		UsedVehicleMarket uvm = new UsedVehicleMarket(this.random);
 		for(int i=0; i<iterations; i++){
@@ -80,7 +80,7 @@ public class FleetModeling {
 			//TODO: Marie
 //			uvm.model(this.households, this.vehicles, this.assignedVeh);
 			
-			this.printUtils.printVehicleInformation(this.vehicles, this.currentYear);
+//			this.printUtils.printVehicleInformation(this.vehicles, this.currentYear);
 			
 			this.currentYear += 1;
 		}
