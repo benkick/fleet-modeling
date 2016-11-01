@@ -19,9 +19,11 @@ public class VehicleScrapping {
 	private static final Logger log = Logger.getLogger(VehicleScrapping.class.getName());
 	
 	private final Random random;
+	private final List<Id<Household>> affectedHHs;
 
 	public VehicleScrapping(Random random) {
 		this.random = random;
+		this.affectedHHs = new ArrayList<>();
 	}
 
 	public void scrapVehicles(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, Households households, int currentYear) {
@@ -45,6 +47,10 @@ public class VehicleScrapping {
 		log.info("Scrapped vehicles: " + scrappedVeh.size());
 	}
 
+	void reset() {
+		this.affectedHHs.clear();
+	}
+
 	//TODO: Related to above: is there a more elegant way to remove vehicles from households?
 	private void removeFromHHs(Households households, List<Id<Vehicle>> scrappedVeh) {
 		for(Household hh : households.getHouseholds().values()){
@@ -56,6 +62,7 @@ public class VehicleScrapping {
 			for(Id<Vehicle> vid : vids){
 				if(scrappedVeh.contains(vid)){
 					hh.getVehInHH().removeVehicle(hh.getVehInHH().getVehicles().get(vid));
+					if(!this.affectedHHs.contains(hh.getId())) this.affectedHHs.add(hh.getId());
 				}
 			}
 		}
@@ -109,5 +116,9 @@ public class VehicleScrapping {
 		if(rd>survivalProb) failure = true;
 //		if(failure) System.out.println(vehAge + "; " +  rd + "; " + survivalProb);
 		return failure;
+	}
+
+	public List<Id<Household>> getAffectedHHs() {
+		return affectedHHs;
 	}
 }

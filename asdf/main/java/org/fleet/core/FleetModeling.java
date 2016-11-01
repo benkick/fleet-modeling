@@ -83,7 +83,7 @@ public class FleetModeling {
 			/*
 			 * TODO:
 			 */
-			nvm.model();
+			nvm.model(scr.getAffectedHHs());
 			
 			/*
 			 * TODO:
@@ -96,6 +96,8 @@ public class FleetModeling {
 			this.printUtils.printHouseholdInformation(this.households);
 			
 			this.currentYear += 1;
+			
+			scr.reset();
 		}
 		log.info("Leaving simulation...");
 	}
