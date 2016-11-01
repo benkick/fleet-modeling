@@ -37,6 +37,7 @@ public class VehicleScrapping {
 				scrappedVeh.add(veh.getId());
 			}
 		}
+
 		//TODO: Is there a more elegant way to update vehicles simultaneously everywhere?
 		removeFromAssignedVehicles(assignedVeh, scrappedVeh);
 		removeFromVeh(vehicles, scrappedVeh);
