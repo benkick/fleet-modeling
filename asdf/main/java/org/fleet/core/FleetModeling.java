@@ -67,7 +67,6 @@ public class FleetModeling {
 			log.info("\n=================================================\n"
 					+ "Simulating transactions for year " + this.currentYear + "\n"
 					+ "=================================================");
-			
 			/*
 			 * TODO:
 			 * - Fill with life
