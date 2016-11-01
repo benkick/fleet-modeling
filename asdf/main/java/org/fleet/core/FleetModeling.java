@@ -72,7 +72,7 @@ public class FleetModeling {
 			 * TODO:
 			 * - Fill with life
 			 */
-			hhu.updateHouseholds(this.households);
+//			hhu.updateHouseholds(this.households);
 			
 			/*
 			 * TODO:
@@ -82,12 +82,14 @@ public class FleetModeling {
 			scr.scrapVehicles(this.vehicles, this.assignedVeh, this.households, this.currentYear);
 			
 			/*
-			 * TODO: Benjamin
+			 * TODO:
 			 */
-//			nvm.model();
+			nvm.model();
 			
 			/*
-			 * TODO: Marie
+			 * TODO:
+			 * - Perform buying/selling transactions
+			 * - Think about households selling/buying more than one vehicle ("at least(?)"-comments)
 			 */
 //			uvm.model(this.households, this.vehicles, this.assignedVeh);
 			

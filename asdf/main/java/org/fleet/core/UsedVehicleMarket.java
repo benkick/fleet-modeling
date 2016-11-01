@@ -31,7 +31,7 @@ public class UsedVehicleMarket {
 		Vehicles vehForSale = chooseVehiclesForSale(vehicles, assignedVeh);
 		Households sellingHHs = chooseSellingHHs(vehForSale, households);
 		Households buyingHHs = chooseBuyingHHs(sellingHHs, households);
-		//TODO: Clear the market: swap vehicles.
+		//TODO: Perform buying/selling transactions
 	}
 	
 	/**
@@ -108,10 +108,11 @@ public class UsedVehicleMarket {
 		return markForSale;
 	}
 
-//  TODO: Now the probability for a vehicle purchase is a bit distorted, because HHs selling more than one vehicle appear only once
+//  TODO: The probability for a vehicle purchase is a bit distorted, because HHs selling more than one vehicle appear only once
 	/*
 	 * Assumption: 80% of the households selling at least(?) one vehicle will buy at least(?) one "new" second-hand vehicle;
-	 * Implication (some probability theory): 6.51 % of the households not selling at least(?) one vehicle, will buy at least(?) one "new" second-hand vehicle
+	 * Implication (some probability theory):
+	 * - 6.51 % of the households not selling at least(?) one vehicle, will buy at least(?) one "new" second-hand vehicle
 	 */
 	/**
 	 * This method chooses the households which will buy used cars.
