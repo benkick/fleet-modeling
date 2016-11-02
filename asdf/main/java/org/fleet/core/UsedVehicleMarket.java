@@ -1,5 +1,6 @@
 package org.fleet.core;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
@@ -15,11 +16,13 @@ import org.fleet.types.Vehicles;
  * @author bolz_ma, benkick
  *
  */
+
+// it would be nice to have buyingHHs, sellingHHs and vehForSale as global variables, because that would make removing vehicles and so on much easier..., Marie Nov'16
 public class UsedVehicleMarket {
 	private static final Logger log = Logger.getLogger(UsedVehicleMarket.class.getName());
 	
 	private final Random random;
-
+	
 	public UsedVehicleMarket(Random random) {
 		this.random = random;
 	}
@@ -139,5 +142,75 @@ public class UsedVehicleMarket {
 		}
 		log.info("Number of households buying (at least?) one second-hand vehicle: "+ buyingHHs.getHouseholds().size());
 		return buyingHHs;
+	}
+	
+// we need a global variable sellingHHs here, or not??	Marie Nov'16
+//	private void removeFromHHs(Households households, Vehicles VehForSale) {
+//		for(Household hh : households.getHouseholds().values()){
+//			List<Id<Vehicle>> vids = new ArrayList<>();
+//			for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
+//				vids.add(vid);
+//			}
+//			
+//			for(Id<Vehicle> vid : vids){
+//				if(VehForSale.getVehicles().containsKey(vid)){
+//					hh.getVehInHH().removeVehicle(hh.getVehInHH().getVehicles().get(vid));
+//					if(!this.affectedHHs.contains(hh.getId())) this.affectedHHs.add(hh.getId());
+//				}
+//			}
+//		}
+//	}
+
+//TODO: chooseVeh method for choosing the car that is bought by this housuhold	
+//	private void buyCar(Household hh, Vehicles vehForSale, int noOfBoughtVeh){
+//		for(int i =0; i < noOfBoughtVeh; i++){
+//			Vehicle veh = chooseVeh();
+//			if(veh == null){
+//				log.info("All vehicles in the second hand market have allready been assigned. Household "+ hh.getId() +" can't buy a used car.");
+//			}
+//			hh.getVehInHH().addVehicle(veh);
+//		}
+//	}
+	
+//	private Vehicle chooseVeh(Vehicles vehForSale){
+//		
+//	}
+
+	
+//TODO: which probabilities can be used to determine how many cars are bought
+/*assumption that the probability of buying as many cars as were sold is 50%
+ *buy one more than was sold is 25%
+ *buy one less than was sold is 25% 
+ */
+	private int determineNoOfBoughtVeh (Household hh, int NoOfSoldVeh){
+		double rd = random.nextDouble();
+		int noOfBoughtVeh = 0;
+		if(rd < 0.5){
+			noOfBoughtVeh = NoOfSoldVeh;
+		}else if(rd < 0.75){
+			noOfBoughtVeh = NoOfSoldVeh -1;
+		}
+		else{
+			noOfBoughtVeh = NoOfSoldVeh +1;
+		}
+		return noOfBoughtVeh;
+	}
+
+/**
+ * This method determines the number of cars that have been sold by this household
+ * 
+ * @param hh the household that sold cars
+ * @param vehForSale the vehicles on the second hand market
+ * 
+ * @return the number of vehicles that have been sold by the given household
+ */
+	private int determineNoOfSoldVeh(Household hh, Vehicles vehForSale){
+		int noOfSoldVeh = 0;
+		for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
+			if(vehForSale.getVehicles().containsKey(vid)){
+				noOfSoldVeh++;
+			}
+		}
+		return noOfSoldVeh;
 	}
 }
