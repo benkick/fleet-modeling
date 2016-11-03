@@ -37,28 +37,6 @@ public class UsedVehicleMarket {
 		clearSecondHandMarket(vehForSale, remainingVeh, sellingHHs, buyingHHs);
 		//TODO: Perform buying/selling transactions
 	}
-	
-	/**
-	 * This method determines the households selling vehicles.
-	 * 
-	 * @param soldVehicles the vehicles that are sold
-	 * @param households all households
-	 * @return the households selling at least one vehicle
-	 */
-	private Households chooseSellingHHs(Vehicles soldVehicles, Households households){
-		Households sellingHHs = new Households();
-		for(Household  hh : households.getHouseholds().values()){
-			boolean isSelling = false;
-			for(Vehicle veh : soldVehicles.getVehicles().values()){
-				if(hh.getVehInHH().getVehicles().get(veh.getId()) != null){
-					isSelling = true;
-				}
-			}
-			if(isSelling) sellingHHs.addHousehold(hh);
-		}
-		log.info("Number of households selling at least one vehicle: " + sellingHHs.getHouseholds().size());
-		return sellingHHs;
-	}
 
 	/**
 	 * This method computes the second-hand vehicles that are sold this year using the method markVehForSale.
@@ -92,9 +70,9 @@ public class UsedVehicleMarket {
 	private boolean markVehForSale(Vehicle veh){
 		boolean markForSale = false;
 		double rand = this.random.nextDouble();
-
+	
 		Drivetrain drivetrain = veh.getDt();
-
+	
 		if(drivetrain.equals(Drivetrain.GASOLINE)){
 			if(rand < 0.1645) markForSale = true;
 		}else if(drivetrain.equals(Drivetrain.DIESEL)){
@@ -111,7 +89,29 @@ public class UsedVehicleMarket {
 		return markForSale;
 	}
 
-//  TODO: The probability for a vehicle purchase is a bit distorted, because HHs selling more than one vehicle appear only once
+	/**
+	 * This method determines the households selling vehicles.
+	 * 
+	 * @param soldVehicles the vehicles that are sold
+	 * @param households all households
+	 * @return the households selling at least one vehicle
+	 */
+	private Households chooseSellingHHs(Vehicles soldVehicles, Households households){
+		Households sellingHHs = new Households();
+		for(Household  hh : households.getHouseholds().values()){
+			boolean isSelling = false;
+			for(Vehicle veh : soldVehicles.getVehicles().values()){
+				if(hh.getVehInHH().getVehicles().get(veh.getId()) != null){
+					isSelling = true;
+				}
+			}
+			if(isSelling) sellingHHs.addHousehold(hh);
+		}
+		log.info("Number of households selling at least one vehicle: " + sellingHHs.getHouseholds().size());
+		return sellingHHs;
+	}
+
+	//  TODO: The probability for a vehicle purchase is a bit distorted, because HHs selling more than one vehicle appear only once
 	/*
 	 * Assumption: 80% of the households selling at least(?) one vehicle will buy at least(?) one "new" second-hand vehicle;
 	 * Implication (some probability theory):
@@ -143,7 +143,21 @@ public class UsedVehicleMarket {
 		log.info("Number of households buying (at least?) one second-hand vehicle: "+ buyingHHs.getHouseholds().size());
 		return buyingHHs;
 	}
-	
+
+	private void clearSecondHandMarket(Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, Households sellingHHs, Households buyingHHs){
+		removeFromHHs(sellingHHs, vehForSale);
+		int didNotBuyCnt = 0;
+		for(Household hh : buyingHHs.getHouseholds().values()){
+			int noOfSoldVeh = determineNoOfSoldVeh(hh, vehForSale);
+			int noOfBoughtVeh = determineNoOfBoughtVeh(hh, noOfSoldVeh);
+			boolean boughtCar = buyCar(hh, vehForSale, remainingVeh, noOfBoughtVeh);
+			if(!boughtCar){
+				didNotBuyCnt++;
+			}
+		}
+		log.info("Households which didn't buy cars: " + didNotBuyCnt);
+	}
+
 	private void removeFromHHs(Households sellingHHs, Vehicles vehForSale) {
 		for(Household hh : sellingHHs.getHouseholds().values()){
 			List<Id<Vehicle>> vids = new ArrayList<>();
@@ -159,20 +173,68 @@ public class UsedVehicleMarket {
 		}
 	}
 
-//TODO: chooseVeh method for choosing the car that is bought by this household	
-	private boolean buyCar(Household hh, Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, int noOfBoughtVeh){
-		boolean boughtCar = false;
-		for(int i =0; i < noOfBoughtVeh; i++){
-			Vehicle veh = chooseVeh(remainingVeh, vehForSale);
-			if(veh == null){	
-//				log.info("All vehicles in the second hand market have already been assigned. Household "+ hh.getId() +" can't buy a used car.");
-			}else{
-				hh.getVehInHH().addVehicle(veh);
-				boughtCar = true;
+	/**
+	 * This method determines the number of cars that have been sold by this household
+	 * 
+	 * @param hh the household that sold cars
+	 * @param vehForSale the vehicles on the second hand market
+	 * 
+	 * @return the number of vehicles that have been sold by the given household
+	 */
+		private int determineNoOfSoldVeh(Household hh, Vehicles vehForSale){
+			int noOfSoldVeh = 0;
+			for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
+				if(vehForSale.getVehicles().containsKey(vid)){
+					noOfSoldVeh++;
+				}
 			}
+			return noOfSoldVeh;
 		}
-		return boughtCar;
-	}
+
+	//TODO: which probabilities can be used to determine how many cars are bought
+	/*assumption that the probability of buying as many cars as were sold is 50%
+	 *buy one more than was sold is 25%
+	 *buy one less than was sold is 25% 
+	 *
+	 *assumption that if the household didn't sell a car but was chosen to buy at least one, the probability to buy one car is 95%,
+	 * the probability to buy to is 5%
+	 */
+		private int determineNoOfBoughtVeh (Household hh, int noOfSoldVeh){
+			double rd = random.nextDouble();
+			int noOfBoughtVeh = 0;
+			if(noOfSoldVeh != 0){
+				if(rd < 0.5){
+					noOfBoughtVeh = noOfSoldVeh;
+				}else if(rd < 0.75){
+					noOfBoughtVeh = noOfSoldVeh -1;
+				}
+				else{
+					noOfBoughtVeh = noOfSoldVeh +1;
+				}
+			}else{
+				if(rd<0.95){
+					noOfBoughtVeh = 1;
+				}else{
+					noOfBoughtVeh = 2;
+				}
+			}
+			return noOfBoughtVeh;
+		}
+
+	//TODO: chooseVeh method for choosing the car that is bought by this household	
+			private boolean buyCar(Household hh, Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, int noOfBoughtVeh){
+				boolean boughtCar = false;
+				for(int i =0; i < noOfBoughtVeh; i++){
+					Vehicle veh = chooseVeh(remainingVeh, vehForSale);
+					if(veh == null){	
+		//				log.info("All vehicles in the second hand market have already been assigned. Household "+ hh.getId() +" can't buy a used car.");
+					}else{
+						hh.getVehInHH().addVehicle(veh);
+						boughtCar = true;
+					}
+				}
+				return boughtCar;
+			}
 
 	private Vehicle chooseVeh(List<Id<Vehicle>> remainingVeh, Vehicles vehForSale){
 		Vehicle chosenVeh = null;
@@ -184,68 +246,5 @@ public class UsedVehicleMarket {
 		}
 		return chosenVeh;
 	
-	}
-
-	
-//TODO: which probabilities can be used to determine how many cars are bought
-/*assumption that the probability of buying as many cars as were sold is 50%
- *buy one more than was sold is 25%
- *buy one less than was sold is 25% 
- *
- *assumption that if the household didn't sell a car but was chosen to buy at least one, the probability to buy one car is 95%,
- * the probability to buy to is 5%
- */
-	private int determineNoOfBoughtVeh (Household hh, int noOfSoldVeh){
-		double rd = random.nextDouble();
-		int noOfBoughtVeh = 0;
-		if(noOfSoldVeh != 0){
-			if(rd < 0.5){
-				noOfBoughtVeh = noOfSoldVeh;
-			}else if(rd < 0.75){
-				noOfBoughtVeh = noOfSoldVeh -1;
-			}
-			else{
-				noOfBoughtVeh = noOfSoldVeh +1;
-			}
-		}else{
-			if(rd<0.95){
-				noOfBoughtVeh = 1;
-			}else{
-				noOfBoughtVeh = 2;
-			}
-		}
-		return noOfBoughtVeh;
-	}
-
-/**
- * This method determines the number of cars that have been sold by this household
- * 
- * @param hh the household that sold cars
- * @param vehForSale the vehicles on the second hand market
- * 
- * @return the number of vehicles that have been sold by the given household
- */
-	private int determineNoOfSoldVeh(Household hh, Vehicles vehForSale){
-		int noOfSoldVeh = 0;
-		for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
-			if(vehForSale.getVehicles().containsKey(vid)){
-				noOfSoldVeh++;
-			}
-		}
-		return noOfSoldVeh;
-	}
-	
-	private void clearSecondHandMarket(Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, Households sellingHHs, Households buyingHHs){
-		removeFromHHs(sellingHHs, vehForSale);
-		int didNotBuyCnt = 0;
-		for(Household hh : buyingHHs.getHouseholds().values()){
-			int noOfSoldVeh = determineNoOfSoldVeh(hh, vehForSale);
-			int noOfBoughtVeh = determineNoOfBoughtVeh(hh, noOfSoldVeh);
-			boolean boughtCar = buyCar(hh, vehForSale, remainingVeh, noOfBoughtVeh);
-			if(!boughtCar){
-				didNotBuyCnt++;
-			}
-		}
-		log.info("Households which didn't buy cars: " + didNotBuyCnt);
 	}
 }
