@@ -90,7 +90,7 @@ public class FleetModeling {
 			 * - Perform buying/selling transactions
 			 * - Think about households selling/buying more than one vehicle ("at least(?)"-comments)
 			 */
-//			uvm.model(this.households, this.vehicles, this.assignedVeh);
+			uvm.model(this.households, this.vehicles, this.assignedVeh);
 			
 			this.printUtils.printVehicleInformation(this.vehicles, this.currentYear);
 			this.printUtils.printHouseholdInformation(this.households);
