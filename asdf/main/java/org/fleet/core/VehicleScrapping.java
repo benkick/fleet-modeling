@@ -23,7 +23,7 @@ public class VehicleScrapping {
 
 	public VehicleScrapping(Random random) {
 		this.random = random;
-		this.affectedHHs = new ArrayList<>();
+		this.affectedHHs = new ArrayList<Id<Household>>();
 	}
 
 	public void scrapVehicles(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, Households households, int currentYear) {
@@ -41,9 +41,9 @@ public class VehicleScrapping {
 		}
 
 		//TODO: Is there a more elegant way to update vehicles simultaneously everywhere?
-		removeFromAssignedVehicles(assignedVeh, scrappedVeh);
-		removeFromVeh(vehicles, scrappedVeh);
-		removeFromHHs(households, scrappedVeh);
+		removeVehFromAssignedVehicles(assignedVeh, scrappedVeh);
+		removeVehFromVeh(vehicles, scrappedVeh);
+		removeVehFromHHs(households, scrappedVeh);
 		log.info("Scrapped vehicles: " + scrappedVeh.size());
 	}
 
@@ -52,7 +52,7 @@ public class VehicleScrapping {
 	}
 
 	//TODO: Related to above: is there a more elegant way to remove vehicles from households?
-	private void removeFromHHs(Households households, List<Id<Vehicle>> scrappedVeh) {
+	private void removeVehFromHHs(Households households, List<Id<Vehicle>> scrappedVeh) {
 		for(Household hh : households.getHouseholds().values()){
 			List<Id<Vehicle>> vids = new ArrayList<>();
 			for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
@@ -68,13 +68,13 @@ public class VehicleScrapping {
 		}
 	}
 
-	private void removeFromVeh(Vehicles vehicles, List<Id<Vehicle>> scrappedVeh) {
+	private void removeVehFromVeh(Vehicles vehicles, List<Id<Vehicle>> scrappedVeh) {
 		for(Id<Vehicle> vid : scrappedVeh){
 			vehicles.removeVehicle(vehicles.getVehicles().get(vid));
 		}
 	}
 
-	private void removeFromAssignedVehicles(List<Id<Vehicle>> assignedVeh, List<Id<Vehicle>> scrappedVeh) {
+	private void removeVehFromAssignedVehicles(List<Id<Vehicle>> assignedVeh, List<Id<Vehicle>> scrappedVeh) {
 		for(Id<Vehicle> vid : scrappedVeh){
 			assignedVeh.remove(vid);
 		}
@@ -98,7 +98,7 @@ public class VehicleScrapping {
 		 * in too low survival rates for the joint distribution of cars
 		 * that are still on the road after e.g. x years.
 		 * 
-		 * (Should be 80% after 10 years and 5% after 20 years, but is with this code 52% after 10 years).
+		 * (Should be 80% (70%) after 10 years and 5% after 20 years, but is with this code 52% after 10 years).
 		 * 
 		 * --> Check theory on survival/hazard function for REPEATED DRAWS!
 		 */

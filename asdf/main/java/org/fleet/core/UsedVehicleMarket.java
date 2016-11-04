@@ -34,8 +34,7 @@ public class UsedVehicleMarket {
 		List<Id<Vehicle>> remainingVeh = new ArrayList<Id<Vehicle>>(vehForSale.getVehicles().keySet());
 		Households sellingHHs = chooseSellingHHs(vehForSale, households);
 		Households buyingHHs = chooseBuyingHHs(sellingHHs, households);
-		clearSecondHandMarket(vehForSale, remainingVeh, sellingHHs, buyingHHs);
-		//TODO: Perform buying/selling transactions
+		clearUsedVehicleMarket(vehForSale, remainingVeh, sellingHHs, buyingHHs);
 	}
 
 	/**
@@ -144,21 +143,21 @@ public class UsedVehicleMarket {
 		return buyingHHs;
 	}
 
-	private void clearSecondHandMarket(Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, Households sellingHHs, Households buyingHHs){
-		removeFromHHs(sellingHHs, vehForSale);
+	private void clearUsedVehicleMarket(Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, Households sellingHHs, Households buyingHHs){
+		removeVehFromHHs(sellingHHs, vehForSale);
 		int didNotBuyCnt = 0;
 		for(Household hh : buyingHHs.getHouseholds().values()){
 			int noOfSoldVeh = determineNoOfSoldVeh(hh, vehForSale);
 			int noOfBoughtVeh = determineNoOfBoughtVeh(hh, noOfSoldVeh);
 			boolean boughtCar = buyCar(hh, vehForSale, remainingVeh, noOfBoughtVeh);
-			if(!boughtCar){
-				didNotBuyCnt++;
-			}
+			if(!boughtCar) didNotBuyCnt++;
 		}
+		//TODO: this counter does not make sense since it potentially counts the same household twice;
+		//It also does not fit to the counter under buyCar()
 		log.info("Households which didn't buy cars: " + didNotBuyCnt);
 	}
 
-	private void removeFromHHs(Households sellingHHs, Vehicles vehForSale) {
+	private void removeVehFromHHs(Households sellingHHs, Vehicles vehForSale) {
 		for(Household hh : sellingHHs.getHouseholds().values()){
 			List<Id<Vehicle>> vids = new ArrayList<>();
 			for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
@@ -184,7 +183,7 @@ public class UsedVehicleMarket {
 		private int determineNoOfSoldVeh(Household hh, Vehicles vehForSale){
 			int noOfSoldVeh = 0;
 			for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
-				if(vehForSale.getVehicles().containsKey(vid)){
+				if(vehForSale.getVehicles().get(vid) != null){
 					noOfSoldVeh++;
 				}
 			}
@@ -206,10 +205,10 @@ public class UsedVehicleMarket {
 				if(rd < 0.5){
 					noOfBoughtVeh = noOfSoldVeh;
 				}else if(rd < 0.75){
-					noOfBoughtVeh = noOfSoldVeh -1;
+					noOfBoughtVeh = noOfSoldVeh - 1; //this could result in noOfBoughtVeh = 0, Benjamin Nov'16
 				}
 				else{
-					noOfBoughtVeh = noOfSoldVeh +1;
+					noOfBoughtVeh = noOfSoldVeh + 1;
 				}
 			}else{
 				if(rd<0.95){
@@ -221,30 +220,29 @@ public class UsedVehicleMarket {
 			return noOfBoughtVeh;
 		}
 
-	//TODO: chooseVeh method for choosing the car that is bought by this household	
-			private boolean buyCar(Household hh, Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, int noOfBoughtVeh){
-				boolean boughtCar = false;
-				for(int i =0; i < noOfBoughtVeh; i++){
-					Vehicle veh = chooseVeh(remainingVeh, vehForSale);
-					if(veh == null){	
-		//				log.info("All vehicles in the second hand market have already been assigned. Household "+ hh.getId() +" can't buy a used car.");
-					}else{
-						hh.getVehInHH().addVehicle(veh);
-						boughtCar = true;
-					}
+		//TODO: chooseVeh method for choosing the car that is bought by this household	
+		private boolean buyCar(Household hh, Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, int noOfBoughtVeh){
+			boolean boughtCar = false;
+			for(int i=0; i<noOfBoughtVeh; i++){
+				Vehicle veh = chooseVeh(remainingVeh, vehForSale);
+				if(veh == null){	
+					log.info("All vehicles in the second hand market have already been assigned. Household "+ hh.getId() +" can't buy a second-hand vehicle.");
+				}else{
+					hh.getVehInHH().addVehicle(veh);
+					boughtCar = true;
 				}
-				return boughtCar;
 			}
+			return boughtCar;
+		}
 
 	private Vehicle chooseVeh(List<Id<Vehicle>> remainingVeh, Vehicles vehForSale){
 		Vehicle chosenVeh = null;
 		if(remainingVeh.size()>0){
-			int rd = random.nextInt(remainingVeh.size());
+			int rd = this.random.nextInt(remainingVeh.size());
 			Id<Vehicle> chosenVehId = remainingVeh.get(rd);
 			chosenVeh = vehForSale.getVehicles().get(chosenVehId);
 			remainingVeh.remove(chosenVehId);
 		}
 		return chosenVeh;
-	
 	}
 }
