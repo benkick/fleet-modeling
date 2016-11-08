@@ -26,7 +26,7 @@ public class UsedVehicleMarket {
 		this.random = random;
 	}
 
-	void model(Households households, Vehicles vehicles, List<Id<Vehicle>> assignedVeh) {
+	void model(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, Households households) {
 		log.info("\n" 
 				+ "Simulating used vehicle market \n"
 				+ "*************************************************");

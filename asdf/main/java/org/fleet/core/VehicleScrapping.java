@@ -6,7 +6,6 @@ import java.util.Random;
 import java.util.logging.Logger;
 
 import org.fleet.types.Household;
-import org.fleet.types.Households;
 import org.fleet.types.Id;
 import org.fleet.types.Vehicle;
 import org.fleet.types.Vehicles;
@@ -26,63 +25,30 @@ public class VehicleScrapping {
 		this.affectedHHs = new ArrayList<Id<Household>>();
 	}
 
-	public void scrapVehicles(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, Households households, int currentYear) {
+	public void scrapVehicles(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, int currentYear) {
 		log.info("\n" 
 				+ "Scrapping vehicles \n"
 				+ "-------------------------------------------------");
-		List<Id<Vehicle>> scrappedVeh = new ArrayList<>();
-		
+		List<Vehicle> scrappedVeh = new ArrayList<>();
+
 		for(Vehicle veh : vehicles.getVehicles().values()){
 			int vehAge = currentYear - veh.getYm();
 			boolean scrap = checkForFailure(vehAge);
 			if(scrap){
-				scrappedVeh.add(veh.getId());
+				scrappedVeh.add(veh);
 			}
 		}
-
-		//TODO: Is there a more elegant way to update vehicles simultaneously everywhere?
-		removeVehFromAssignedVehicles(assignedVeh, scrappedVeh);
-		removeVehFromVeh(vehicles, scrappedVeh);
-		removeVehFromHHs(households, scrappedVeh);
+		for(Vehicle veh : scrappedVeh){
+			Household hh = veh.getHH();
+			if(!this.affectedHHs.contains(hh.getId())) this.affectedHHs.add(hh.getId());
+			assignedVeh.remove(veh.getId());
+			vehicles.removeVehicle(veh);
+		}
 		log.info("Scrapped vehicles: " + scrappedVeh.size());
 	}
 
-	void reset() {
-		this.affectedHHs.clear();
-	}
-
-	//TODO: Related to above: is there a more elegant way to remove vehicles from households?
-	private void removeVehFromHHs(Households households, List<Id<Vehicle>> scrappedVeh) {
-		for(Household hh : households.getHouseholds().values()){
-			List<Id<Vehicle>> vids = new ArrayList<>();
-			for(Id<Vehicle> vid : hh.getVehInHH().getVehicles().keySet()){
-				vids.add(vid);
-			}
-			
-			for(Id<Vehicle> vid : vids){
-				if(scrappedVeh.contains(vid)){
-					hh.getVehInHH().removeVehicle(hh.getVehInHH().getVehicles().get(vid));
-					if(!this.affectedHHs.contains(hh.getId())) this.affectedHHs.add(hh.getId());
-				}
-			}
-		}
-	}
-
-	private void removeVehFromVeh(Vehicles vehicles, List<Id<Vehicle>> scrappedVeh) {
-		for(Id<Vehicle> vid : scrappedVeh){
-			vehicles.removeVehicle(vehicles.getVehicles().get(vid));
-		}
-	}
-
-	private void removeVehFromAssignedVehicles(List<Id<Vehicle>> assignedVeh, List<Id<Vehicle>> scrappedVeh) {
-		for(Id<Vehicle> vid : scrappedVeh){
-			assignedVeh.remove(vid);
-		}
-	}
-
 	/**
-	 * This method flags a vehicle for scrapping depending on
-	 * the vehicle age and assumed survival probabilities.
+	 * This method flags a vehicle for scrapping depending on the vehicle age and assumed survival probabilities.
 	 * <p>
 	 * See <a href= "https://www.researchgate.net/publication/46463264_Schatzung_der_Wirkung_umweltpolitischer_Massnahmen_im_Verkehrssektor_unter_Nutzung_der_Datenbasis_der_Gesamtrechnung_des_Statistischen_Bundesamtes">http://www.researchgate.net</a>
 	 * 
@@ -116,6 +82,10 @@ public class VehicleScrapping {
 		if(rd>survivalProb) failure = true;
 //		if(failure) System.out.println(vehAge + "; " +  rd + "; " + survivalProb);
 		return failure;
+	}
+
+	void reset() {
+		this.affectedHHs.clear();
 	}
 
 	public List<Id<Household>> getAffectedHHs() {

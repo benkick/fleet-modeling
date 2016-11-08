@@ -16,16 +16,12 @@ import org.fleet.types.Vehicles;
 public class NewVehicleMarket {
 	private static final Logger log = Logger.getLogger(NewVehicleMarket.class.getName());
 
-	public void model(Households households,
-			List<Id<Household>> affectedHouseholds,
-			Vehicles vehicles,
-			List<Id<Vehicle>> assignedVeh) {
+	public void model(Vehicles vehicles, List<Id<Vehicle>> assignedVeh, Households households, List<Id<Household>> affectedHouseholds) {
 		log.info("\n" 
 				+ "Simulating new vehicle market \n"
 				+ "+++++++++++++++++++++++++++++++++++++++++++++++++");
 		
-		log.info("Number of households with at least one scrapped vehicle: " + affectedHouseholds.size() + "\n"
-				+ "They will replace the vehicles by new ones.");
+		log.info("Number of households with at least one scrapped vehicle: " + affectedHouseholds.size());
 		
 		Vehicles newVehicles = generateNewVehicles();
 		

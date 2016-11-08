@@ -1,7 +1,7 @@
 package org.fleet.types;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 /**
  * @author benkick
@@ -9,19 +9,31 @@ import java.util.Map;
  */
 public class Households {
 	
-	private Map<Id<Household>, Household> households;
+	private SortedMap<Id<Household>, Household> households;
+	private Vehicles vehiclesOfHHs;
 	
 	public Households(){
-		households = new HashMap<Id<Household>, Household>();
+		this.households = new TreeMap<Id<Household>, Household>();
+		this.vehiclesOfHHs = null;
 	}
 
-	public Map<Id<Household>, Household> getHouseholds() {
-		return households;
+	public SortedMap<Id<Household>, Household> getHouseholds() {
+		return this.households;
+	}
+
+	public Vehicles getVehiclesOfHHs(){
+		this.vehiclesOfHHs = new Vehicles();
+		for(Household hh : this.households.values()){
+			for(Vehicle veh : hh.getVehInHH().getVehicles().values()){
+				this.vehiclesOfHHs.addVehicle(veh);
+			}
+		}
+		return this.vehiclesOfHHs;
 	}
 
 	public void addHousehold(Household household) {
-		if(!households.containsKey(household.getId())){
-			households.put(household.getId(), household);
+		if(this.households.get(household.getId()) == null){
+			this.households.put(household.getId(), household);
 		}
 		else{
 			throw new RuntimeException("Household " + household.getId() + " already exists. Aborting...");

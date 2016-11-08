@@ -9,6 +9,8 @@ public class Vehicle {
 	private final Id<Vehicle> id;
 	private final int ym;
 	private final Drivetrain dt;
+
+	public Household hh = null;
 	
 	public Vehicle(final Id<Vehicle> id, final int ym, final Drivetrain dt){
 		this.id = id;
@@ -25,7 +27,24 @@ public class Vehicle {
 	}
 
 	public int getYm() {
-		return ym;
+		return this.ym;
+	}
+	
+	public Household getHH() {
+		return this.hh;
 	}
 
+	public void linkHHToVeh(Household hh){
+		this.hh = hh;
+	}
+	
+	public Household removeVehFromHH(){
+		Household hh = null;
+		if(this.hh != null){
+			hh = this.hh;
+			this.hh.removeVehfromHH(this);
+			this.hh = null; 
+		}
+		return hh;
+	}
 }
