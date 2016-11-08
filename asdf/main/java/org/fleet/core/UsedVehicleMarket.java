@@ -53,7 +53,7 @@ public class UsedVehicleMarket {
 				vehForSale.addVehicle(veh);
 			}
 		}
-		log.info("Vehicles for sale on second-hand market: "+ vehForSale.getVehicles().size());
+		log.info("Vehicles for sale on second-hand market: " + vehForSale.getVehicles().size());
 		return vehForSale;
 	}
 
@@ -145,16 +145,16 @@ public class UsedVehicleMarket {
 
 	private void clearUsedVehicleMarket(Vehicles vehForSale, List<Id<Vehicle>> remainingVeh, Households sellingHHs, Households buyingHHs){
 		removeVehFromHHs(sellingHHs, vehForSale);
-		int didNotBuyCnt = 0;
+		int nonSuccessfulTransactions = 0;
 		for(Household hh : buyingHHs.getHouseholds().values()){
 			int noOfSoldVeh = determineNoOfSoldVeh(hh, vehForSale);
 			int noOfBoughtVeh = determineNoOfBoughtVeh(hh, noOfSoldVeh);
 			boolean boughtCar = buyCar(hh, vehForSale, remainingVeh, noOfBoughtVeh);
-			if(!boughtCar) didNotBuyCnt++;
+			if(!boughtCar) nonSuccessfulTransactions++;
 		}
 		//TODO: this counter does not make sense since it potentially counts the same household twice;
 		//It also does not fit to the counter under buyCar()
-		log.info("Households which didn't buy cars: " + didNotBuyCnt);
+		log.info("Number of non-successful vehicle transactions: " + nonSuccessfulTransactions);
 	}
 
 	private void removeVehFromHHs(Households sellingHHs, Vehicles vehForSale) {
@@ -226,7 +226,7 @@ public class UsedVehicleMarket {
 			for(int i=0; i<noOfBoughtVeh; i++){
 				Vehicle veh = chooseVeh(remainingVeh, vehForSale);
 				if(veh == null){	
-					log.info("All vehicles in the second hand market have already been assigned. Household "+ hh.getId() +" can't buy a second-hand vehicle.");
+//					log.info("All vehicles in the second hand market have already been assigned. Household "+ hh.getId() +" can't buy a second-hand vehicle.");
 				}else{
 					hh.getVehInHH().addVehicle(veh);
 					boughtCar = true;
