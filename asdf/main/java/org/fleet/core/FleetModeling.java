@@ -21,6 +21,7 @@ import org.fleet.utils.PrintConsoleUtils;
 public class FleetModeling {
 	private static final Logger log = Logger.getLogger(FleetModeling.class.getName());
 
+	
 	private final Random random;
 	private final int noOfVeh;
 	private final int noOfHH;
